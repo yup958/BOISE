@@ -48,7 +48,7 @@ Rearrange <- function(cl = list("K" = 2, "N" = rep(1,2), "phi" = matrix(0,2,2), 
   }
   
   new_cl = list("K" = new_K, "N" = new_N[1:new_K], "phi" = new_phi[1:new_K, ], "C" = new_C)
-  new_cl = label_update(new_cl)
+  new_cl = label_update(new_cl,col = dim(data)[2]+1)
   return(new_cl)
 }
 
