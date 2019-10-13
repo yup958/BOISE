@@ -3,7 +3,7 @@
 ## Output: PEL1 of A
 ## Use package R.utils
 
-pel1 <- function(A, nA, nT = 2, cl, data, iter = 2){
+pel1 <- function(A, nA, nT = 2, cl, data){
   if(cl$K == 1){
     print("Please run DPMM before calculating PEL")
     return(1)
@@ -15,9 +15,9 @@ pel1 <- function(A, nA, nT = 2, cl, data, iter = 2){
     for (b in 1:B) {
       xb = data[which(cl$C == b), ]
       Nb = cl$N[b]
-      tmp = post_eloss(xb, Nb, 0, nA, A, nT, iter)
+      tmp = post_eloss(xb, Nb, 0, nA, A, nT)
       pel = pel + tmp$loss
-      tmp = post_eloss(xb, Nb, 1, nA, A, nT, iter)
+      tmp = post_eloss(xb, Nb, 1, nA, A, nT)
       pel = pel + tmp$loss
     }
     pel = pel / B
@@ -34,7 +34,7 @@ pel1 <- function(A, nA, nT = 2, cl, data, iter = 2){
       xb = data[which(cl$C == b), ]
       Nb = cl$N[b]
       Loss = apply(X, 1, function(x){
-        tmp = post_eloss(xb, Nb, x, nA, A, nT,iter)
+        tmp = post_eloss(xb, Nb, x, nA, A, nT)
         return(tmp$loss)
       })
       pel = pel + sum(Loss)

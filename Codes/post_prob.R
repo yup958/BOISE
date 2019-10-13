@@ -3,16 +3,18 @@
 ## Output: posterior probability calculated using MCMC. As p(xA|xb) = \int p(xA|theta)*p(theta|xb) dtheta
 
 post_prob <- function(xb,Nb,xA,A,nA){
-  source("prob.R")
   if(Nb == 1){
     tmp <- list(J = Nb, K = length(xb), x = xb)
-    fit <- stan(file = "Rasch_Vector.stan",data = tmp, verbose = FALSE, control = list(max_treedepth = 15), iter = 2000)
+    fit <- stan(file = "PEL_Rasch_Vector.stan",data = tmp, control = list(max_treedepth = 15), iter = 4000)
+    la <- extract(fit, permuted = TRUE) # return a list of arrays 
+    alphahat <- la$alpha
   } else{
     tmp <- list(J = Nb, K = dim(xb)[2], x = xb)
-    fit <- stan(file = "Rasch_Matrix.stan",data = tmp, verbose = FALSE, control = list(max_treedepth = 15), iter = 2000)
+    fit <- stan(file = "PEL_Rasch_Matrix.stan",data = tmp, control = list(max_treedepth = 15), iter = 4000)
+    la <- extract(fit, permuted = TRUE) # return a list of arrays 
+    alphahat <- apply(la$alpha,1,mean)
   }
-  la <- extract(fit, permuted = TRUE) # return a list of arrays 
-  alphahat <- la$alpha
+  
   if(nA >= 2){
     btahat <- la$bta[ ,A]
     postprob = 0
@@ -35,8 +37,9 @@ post_prob <- function(xb,Nb,xA,A,nA){
 }
 
 #Test
-# xb <- dat[1,]
-# Nb <- 1
-# xA <- dat[100, c(1,10,100,200)]
-# A <- c(1,10,100,200)
-# p <- post_prob(xb,Nb,xA,A)
+# xb <- dat[c(1,2),]
+# Nb <- 2
+# xA <- dat[100, 1]
+# A <- 1
+# nA = 1
+# p <- post_prob(xb,Nb,xA,A,nA)

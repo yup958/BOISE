@@ -3,7 +3,7 @@
 ## Input: xb, Nb, xA, nA, A,nT
 ## Output: list of Top set and PEL_b
 
-post_eloss <- function(xb, Nb, xA, nA, A,nT = 2,iter = 2){
+post_eloss <- function(xb, Nb, xA, nA, A,nT = 2){
   source("post_prob.R")
   source("post_theta.R")
   if(nT <= 1){
@@ -11,17 +11,17 @@ post_eloss <- function(xb, Nb, xA, nA, A,nT = 2,iter = 2){
     return(0)
   }
   postls <- list(loss = 100, top = rep(0,nT))
-  theta = post_theta(xb, Nb, xA, A, nA, thres = 10,iter = iter)
+  theta = post_theta(xb, Nb, xA, A, nA)
   postls$top = order(theta, decreasing = T)[1:nT]
   postls$loss = post_prob(xb, Nb,xA,A,nA) * sum(1 - theta[postls$top])
   return(postls)
 }
 
-##Test
+# ##Test
 # xb <- dat[1:3,]
 # Nb <- 3
 # xA <- dat[100, 100]
 # A <- 100
 # nA = 1
-# nT = 2
-# postls <- post_eloss(xb,Nb,xA,nA,A,nT, iter = 2)
+# nT = 10
+# postls <- post_eloss(xb,Nb,xA,nA,A,nT)

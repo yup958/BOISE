@@ -3,8 +3,7 @@
 ## If xb has more than thres = 5 targets, may need re-clustering use DPMM
 ## Output: Posterior mean of theta
 
-post_theta <- function(xb, Nb, xA, A, nA, thres = 10,iter = 2){
-  source("dpmm.R")
+post_theta <- function(xb, Nb, xA, A, nA){
   source("single_post.R")
   source("multi_post.R")
   if(nA == 1){
@@ -12,28 +11,6 @@ post_theta <- function(xb, Nb, xA, A, nA, thres = 10,iter = 2){
   } else{
     theta = multi_post(xb,Nb,xA,A)
   }
-  ## Only 1 target in this block
-  # if(Nb <= thres){          
-  #   if(nA == 1){
-  #     theta = single_post(xb, Nb, xA, A)
-  #   } else{
-  #     theta = multi_post(xb,Nb,xA,A)
-  #   }
-  # } else{
-  #   subcl <- dpmm(data = xb, a = Nb %/% 10 + 1, aux = max(2, Nb %/% 20), iter = iter)
-  #   Clas = subcl$K
-  #   N = subcl$N
-  #   C = subcl$C
-  #   theta <- matrix(0, Clas, dim(xb)[2])
-  #   for (i in 1:Clas) {
-  #     if(nA == 1){
-  #       theta[i, ] <- single_post(xb[which(C == i),], N[i], xA, A)
-  #     } else{
-  #       theta[i, ] <- multi_post(xb[which(C == i),], N[i], xA, A)
-  #     }
-  #   }
-  #   theta <- apply(theta,2, mean)
-  # }
    return(theta)
 }
 
