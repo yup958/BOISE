@@ -30,6 +30,8 @@ There are 3 functions:
 
 * dpmm_beta() for sampling a bunch of cluster assignments, after the initial warm-up process;
 
+* Analysis is a R script for test this model. Could be update
+
 Typically, we use hyperparameter alpha and beta to maintain the overall average hit rate within each colomn (compound).
 This is a 2nd version of BOISE model...
 
