@@ -1,8 +1,21 @@
+### R script submitted to CHTC
+### cl.RData is a list of 100 sampled clustering assignments on each of 224 leave-one-out cross validation experiment. 
+### That is, a list of length 224, each element is also a list with 3 elements {KK,NN,CC}
+### Will return a larger informer set for each of the leave-one-out experiment.
 source("pel1_beta.R")
 source("pel2.R")
 source("inform_beta_v1.R")
 source("inform_beta_v2.R")
 #load data
+# cl = list(rep(0,224))
+# for (i in 1:224) {
+#   test = dat[i, ]
+#   train = dat[-i, ]
+#   a = rep(mean(train),dim(train)[2])
+#   b = 1 - a
+#   cl_sample = dpmm_beta(a,b,x0 = train, warm=500, size=1, iter=100, step=10, alpha=15)
+#   cl[[i]] = cl_sample
+# }
 load("cl.RData")
 ## Use 2sd criteria to create binary matrix
 # dat <- t(apply(pkis1, 1, function(x){
@@ -12,10 +25,6 @@ load("cl.RData")
 # dat = dat[ ,-which(apply(dat,2,sum) == 0)]
 # rm(pkis1)
 
-#choose prior
-#a = apply(dat,2,sum)/10
-#b = 10 - a
-
 #choose iterations, warm up step, step length
 warm = 500
 iter = 100
@@ -24,9 +33,7 @@ size = 1000
 
 #find an empirical best prior mass alpha
 alpha = 15
-#alpha = 5
 # Leave-one-out cross validation for BOISE framework
-### Lets try nA = 1,2,3, nT = 10
 nA = 7
 nT = 36
 
@@ -38,7 +45,7 @@ train = dat[-i, ]
 a = rep(mean(train),dim(train)[2])
 b = 1 - a
 
-### Sample for xi
+### Sample for xi, possible outcomes on all 366 compounds
 
 #cl_sample = dpmm_beta(a,b,x0 = train, warm, size, iter, step, alpha)
 cl_sample = cl[[i]]
