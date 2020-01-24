@@ -1,6 +1,6 @@
 ## Input: Informer set A, Data matrix x0, Intermediate data xA, Informer size nA, Top size nT, 
 ## clustering assignment cl, prior a,b, divergence alpha
-## Output: Top set T, PEL2 loss for x0, cl and xA, pel2, and posterior probability of P(xA|C,x0)
+## Output: posterior expectation E(theta|C,x0,xA), and posterior probability P(xA|C,x0)
 
 pel2_beta <- function (cl, x0, xA, nA, A, nT = 10, a, b,alpha){
   K = cl$K
