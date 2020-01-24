@@ -3,7 +3,7 @@
 ## gap between two samples step, divergence alpha 
 ## Output: A list cl_sample, including clustering assignments of size "iter"
 
-dpmm_beta <- function(a, b, x0, warm = 200, iter = 10, step = 5, alpha = 2){
+dpmm_beta <- function(a, b, x0, warm = 500, iter = 100, step = 10, alpha = 15){
   source("Initial_beta.R")
   source("Update_beta.R")
   
