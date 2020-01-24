@@ -1,6 +1,6 @@
 ### Informer set selection function version 1
 ### Pre-step: Sample DPMM samples of cl_sample
-### Input: list cl_sample, corresponding parameters a,b,iter,size,alpha; nA, nT; x0
+### Input: list cl_sample, corresponding parameters a,b,iter,alpha; nA, nT; x0
 ### Output: Informer set A with size nA (via advanced adaptive selection)
 
 inform_beta1 <- function(cl_sample, iter, nA, nT, a, b, x0, alpha){
