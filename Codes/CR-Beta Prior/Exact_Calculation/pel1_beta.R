@@ -2,7 +2,7 @@
 ## top size nT, prior a and b, data x0, divergence alpha
 ## Output: PEL1 of A
 
-pel1_beta <- function(cl_sample, iter, A, nA, nT = 10, a, b, x0, alpha = 2){
+pel1_beta <- function(cl_sample, iter, A, nA, nT = 36, a, b, x0, alpha = 15){
   source("pel2.R")
   ### Compute PEL1
   KK = cl_sample$KK
