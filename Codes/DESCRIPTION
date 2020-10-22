@@ -1,0 +1,9 @@
+Package: BOISE
+Type: Package
+Title: BOISE -- R package for Bayes Optimal Informer SEt selection.
+Version: 1.0.1
+Date: 2020-10-21
+Author: Peng Yu, Michael A. Newton
+Maintainer: Peng Yu <peng.yu@wisc.edu>
+Description: BOISE is a R package for informer set selection and ranking. Currently it supports classic BOISE methods for complete binary data matrix. 
+License: GPL-2
