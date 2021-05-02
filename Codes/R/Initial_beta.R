@@ -1,17 +1,17 @@
 Initial_beta <-
-function(dat, a, b, alpha = 2){
-  n = dim(dat)[1]
-  m = dim(dat)[2]
-  N = rep(0, 2 * n)
-  C = rep(0, n)
+function(x0, m0 = 2){
+  m = nrow(x0)
+  n = ncol(x0)
+  N = rep(0, 2 * m)
+  C = rep(0, m)
   K = 1
   
   N[1] = 1
   C[1] = 1
-  for (i in 2:n) {
+  for (i in 2:m) {
     p = rep(0, K + 1)
-    p[K + 1] = alpha / (i - 1 + alpha)
-    p[1:K] = sapply(1:K,function(x){return(N[x]/(i-1+alpha))})
+    p[K + 1] = m0 / (i - 1 + m0)
+    p[1:K] = sapply(1:K,function(x){return(N[x]/(i-1+m0))})
     class = which(rmultinom(1, 1, p) == 1)
     C[i] = class
     N[class] = N[class] + 1

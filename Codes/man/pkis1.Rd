@@ -2,7 +2,7 @@
 \alias{pkis1}
 \docType{data}
 \title{
-  PKIS1 data
+  PKIS1 data: GSK Published Kinase Inhibitor Set, a chemogenomic data of inhibition rates between human kinases and inhibitors.
 }
 \description{
  224 targets and 366 compounds. Complete non-binarized data.
@@ -16,13 +16,14 @@
   ..$ : chr [1:366] "6539592" "6539600" "6539599" "6539597" ...
 }
 \details{
-%%  ~~ If necessary, more details than the __description__ above ~~
+A data matrix consists of inhibition rates between human kinases and inhibitors.
 }
 \source{
-%%  ~~ reference to a publication or URL from which the data were obtained ~~
+H Drewry, D., M Willson, T., & J Zuercher, W. (2014). Seeding collaborations to advance kinase science with the GSK Published Kinase Inhibitor Set (PKIS). Current topics in medicinal chemistry, 14(3), 340-342.
 }
 \references{
-%%  ~~ possibly secondary sources and usages ~~
+
+ Zhang H, Ericksen SS, Lee C-p, Ananiev GE, Wlodarchak N, Yu P, et al. (2019) Predicting kinase inhibitors using bioactivity matrix derived informer sets. PLoS Comput Biol 15(8): e1006813. https://doi.org/10.1371/journal.pcbi.1006813
 }
 \examples{
 data(pkis1)

@@ -5,11 +5,11 @@
   function to compute PEL-1 loss of an informer set
 }
 \description{
-Input a sample of clustering assignments cl_sample, sample size iter, informer set A and nA, list P, with P[[i]] a matrix summarizing the ith cluster assginment. top size nT, prior a and b, data x0, divergence alpha
+Input a sample of clustering assignments cl_sample, sample size iter, informer set A, list P, with P[[i]] a matrix summarizing the ith cluster assginment. top size nT, prior alpha and beta, data x0, divergence m0
 Output the PEL1 of A
 }
 \usage{
-pel1_beta(cl_sample, P, iter, size, A, nA, nT = 10, a, b, x0, alpha = 2)
+pel1_beta(cl_sample, P, sample_size, interm_size, A, nT = 10, alpha, beta, x0, m0 = 2)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -19,73 +19,67 @@ pel1_beta(cl_sample, P, iter, size, A, nA, nT = 10, a, b, x0, alpha = 2)
   \item{P}{
   An intermediate matrix P that is computed by clust_sum function. It summarizes the cluster assignment information of given cl_sample.
 }
-  \item{iter}{
+  \item{sample_size}{
 Sample size of DPMM clustering
 }
-  \item{size}{
+  \item{interm_size}{
 Sample size of possible intermediate outcomes xA
 }
   \item{A}{
 Informer set
 }
-  \item{nA}{
-Length of informer set
-}
   \item{nT}{
 Length of top set, used to define loss function in BOISE.
 }
-  \item{a}{
+  \item{alpha}{
 Prior hyperparameters alpha0
 }
-  \item{b}{
+  \item{beta}{
 Prior hyperparameters beta0
 }
   \item{x0}{
-Original interaction data.
+Initial bioactivity data.
 }
-  \item{alpha}{
+  \item{m0}{
 Chinese restaurant prior mass m0
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+alpha, beta, m0 should keep the same as in \code{dpmm_beta}. nT is the top set size that defines loss function. P should come from function \code{clust_sum}. 
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+Output is the posterior expected loss (PEL1) of certain informer set A. Defined in BOISE paper.
 }
 \references{
-%% ~put references to the literature/web site here ~
+Yu, P., Ericksen, S.S., Gitter, A. and Newton, M.A. (2020) \emph{Bayes Optimal Informer Sets for Drug Discovery}. University of Wisconsin, Technical Report, 2020.
 }
 \author{
-%%  ~~who you are~~
+Peng Yu, Michael A. Newton
 }
 \note{
-%%  ~~further notes~~
+This is an internal function used in function \code{Boise}
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\url{https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006813}
 }
 \examples{
-#suppose you have the dat and cl_sample as in dpmm_beta
-P = clust_sum(cl_sample, dat, iter = length(cl_sample$KK), a, b)
-size = 1000
-n = nrow(dat)
-m = ncol(dat)
-cl_sample$XX = rep(0, iter * size * m)
-dim(cl_sample$XX) = c(iter, size, m)
-for (j in 1:iter) {
-    toy_samples = rbinom(size*m, 1, 0.5)
-    dim(toy_samples) = c(size, m)
+#suppose you have the data and cl_sample as in dpmm_beta
+P = clust_sum(cl_sample, x0, sample_size = length(cl_sample$KK), alpha, beta)
+sample_size = length(cl_sample$KK)
+interm_size = 1000
+m = nrow(x0)
+n = ncol(x0)
+cl_sample$XX = rep(0, sample_size * interm_size * n)
+dim(cl_sample$XX) = c(sample_size, interm_size, n)
+for (j in 1:sample_size) {
+    toy_samples = rbinom(interm_size * n, 1, 0.5)
+    dim(toy_samples) = c(interm_size, n)
     cl_sample$XX[j, , ] = toy_samples
 }
-pel1 = pel1_beta(cl_sample, P,iter, size, A = c(1,2), nA=length(A), nT=10, a, b, x0 = dat, alpha = 15)
+pel1 = pel1_beta(cl_sample, P,sample_size, interm_size, A = c(1,2), nT=10, alpha, beta, x0, m0 = 15)
 }
 \keyword{ ~kwd1 }% use one of  RShowDoc("KEYWORDS")
 \keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

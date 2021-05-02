@@ -9,7 +9,7 @@ Input: DPMM cluster sampling "cl_sample", informer set "inform", measurement cri
 Output: Evaluated value under given criteria
 }
 \usage{
-Evaluate(cl_sample, inform, measure, test, train, nT, iter, a, b, alpha)
+Evaluate(cl_sample, inform, measure, percent, test, train, nT, sample_size, alpha, beta, m0)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -22,6 +22,9 @@ Selected informer set
   \item{measure}{
 Measurement methods. mesure = c("nef", "rocauc", "mat", "f")
 }
+  \item{percent}{
+Percentage of Top set used in NEF evaluation. Between 0 and 1. Only used for "NEF".
+}
   \item{test}{
 True interaction on new target i*. Should be a vector/array
 }
@@ -31,16 +34,16 @@ Equivalent to original interaction data x0.
   \item{nT}{
 Length of top set, used to define loss function in BOISE.
 }
-  \item{iter}{
-Sample size of DPMM clustering
-}
-  \item{a}{
-Prior hyperparameters alpha0
-}
-  \item{b}{
-Prior hyperparameters beta0
+  \item{sample_size}{
+Sample size of Dirichlet process mixture model clustering
 }
   \item{alpha}{
+Prior hyperparameters alpha0
+}
+  \item{beta}{
+Prior hyperparameters beta0
+}
+  \item{m0}{
 Chinese restaurant prior mass m0
 }
 }
@@ -48,39 +51,35 @@ Chinese restaurant prior mass m0
 "nef": NEF10 metric; "rocauc": ROCAUC; "mat":MCC; "f": F1 score.
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+Evaluated ranking performance under given criteria for given informer set. The ranking is based on posterior expectation, as described in BOISE paper.
 }
 \references{
-%% ~put references to the literature/web site here ~
+Yu, P., Ericksen, S.S., Gitter, A. and Newton, M.A. (2020) \emph{Bayes Optimal Informer Sets for Drug Discovery}. University of Wisconsin, Technical Report, 2020.
 }
 \author{
-%%  ~~who you are~~
+Peng Yu, Michael A. Newton
 }
 \note{
-%%  ~~further notes~~
+Currently nef is only for NEF10 metric.
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\url{https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006813}
 }
 \examples{
 #suppose you have the dat and cl_sample as in dpmm_beta
 data(pkis1)
-dat <- t(apply(pkis1, 1, function(x){
+x0 <- t(apply(pkis1, 1, function(x){
   thres = mean(x) + 2 * sd(x)
   return(as.numeric(x>thres))
 }))
-a = rep(mean(dat,na.rm = T),ncol(dat))
-b = 1-a
-test = rbinom(ncol(dat), 1, 0.5)
-nef = Evaluate(cl_sample, inform = c(1,2), measure = "nef", test, train = dat, nT = 10, iter = 10,
-      a, b, alpha = 15)
+alpha = rep(mean(x0,na.rm = T),ncol(x0))
+beta = 1-alpha
+test = rbinom(ncol(x0), 1, 0.5)
+nef = Evaluate(cl_sample, inform = c(1,2), measure = "nef", percent = 0.1, test, train = x0, nT = 10,
+sample_size = 10, alpha, beta, m0 = 15)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

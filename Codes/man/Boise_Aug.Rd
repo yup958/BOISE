@@ -10,32 +10,32 @@ input of an old informer set and other corresponding parameters to give a
 larger BOISE informer set with size augmented by "nAdd".
 }
 \usage{
-Boise_Aug(cl_sample, iter, size, nT, a, b, x0, alpha, inform, nAdd)
+Boise_Aug(cl_sample, sample_size, interm_size, nT, alpha, beta, x0, m0, inform, nAdd)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{cl_sample}{
 A list of {K, N, C} comes from dpmm_beta.R
 }
-  \item{iter}{
-Sample size of DPMM clustering
+  \item{sample_size}{
+Sample size of clustering assignments from Dirichlet process mixture model.
 }
-  \item{size}{
+  \item{interm_size}{
 Sample size of possible intermediate outcomes xA
 }
   \item{nT}{
 Length of top set, used to define loss function in BOISE.
 }
-  \item{a}{
+  \item{alpha}{
 Prior hyperparameters alpha0
 }
-  \item{b}{
+  \item{beta}{
 Prior hyperparameters beta0
 }
   \item{x0}{
-Original interaction data.
+Initial bioactivity data.
 }
-  \item{alpha}{
+  \item{m0}{
 Chinese restaurant prior mass m0
 }
   \item{inform}{
@@ -46,16 +46,16 @@ Number of new informers to add into original informer set.
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+Parameters should be the same as in \code{Boise}. nAdd is the number of new informers added in this process.
 }
 \value{
 An augmented informer set with size increased by "nAdd"
 }
 \references{
-%% ~put references to the literature/web site here ~
+Yu, P., Ericksen, S.S., Gitter, A. and Newton, M.A. (2020) \emph{Bayes Optimal Informer Sets for Drug Discovery}. University of Wisconsin, Technical Report, 2020.
 }
 \author{
-%%  ~~who you are~~
+Peng Yu, Michale A. Newton
 }
 \note{
 When original informer set size is large, say >=10, we recommend to choose nAdd = 1 or 2 at each time, otherwise may take really long time. We highly recommeend use parallel computing to select large informer sets. 
@@ -64,21 +64,21 @@ When original informer set size is large, say >=10, we recommend to choose nAdd 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\url{https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006813}
 }
 \examples{
 #suppose you have the dat and cl_sample as in dpmm_beta
 data(pkis1)
-dat <- t(apply(pkis1, 1, function(x){
+x0 <- t(apply(pkis1, 1, function(x){
   thres = mean(x) + 2 * sd(x)
   return(as.numeric(x>thres))
 }))
-a = rep(mean(dat,na.rm = T),ncol(dat))
-b = 1-a
-cl_sample = dpmm_beta(a,b,x0 = dat, warm=500, iter=10, step=10, alpha=15)
-size = 1000
-A = Boise(cl_sample, iter = 10, size = 1000, nA = 2, nT = 10, a, b, x0 = dat, alpha = 15)
-A_new = Boise_Aug(cl_sample,iter = 10, size = 2000,nT = 10,a,b,x0 = dat,alpha = 15, 
+alpha = rep(mean(x0,na.rm = T),ncol(x0))
+beta = 1-alpha
+cl_sample = dpmm_beta(x0, alpha, beta, m0=15, burn_in=500, sample_size=10, thinning=10)
+interm_size = 1000
+A = Boise(cl_sample, sample_size = 10, interm_size = 1000, nA = 2, nT = 10, alpha, beta, x0, m0 = 15)
+A_new = Boise_Aug(cl_sample,sample_size = 10, interm_size = 2000,nT = 10,alpha, beta, x0, m0 = 15, 
                     A, nAdd = 1)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
