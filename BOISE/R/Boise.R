@@ -1,5 +1,6 @@
 Boise <-
-function(cl_sample, sample_size, interm_size, nA, nT, alpha, beta, x0, m0){
+function(cl_sample, sample_size, interm_size, nA, nT, alpha, beta, x0, m0,
+         mcParallel = FALSE){
   #source("clust_sum.R")
   #source("npel1.R")
   if (!require('parallel')) {
@@ -45,21 +46,30 @@ function(cl_sample, sample_size, interm_size, nA, nT, alpha, beta, x0, m0){
   }
   ## BOISE selection based on pel1
   step = 1
-  pel1 = unlist(mclapply(1:ncol(x0), function(x){
-    return(pel1_beta(cl, P, sample_size, interm_size, A = x, nT, alpha, beta, x0, m0))},
-    mc.cores = detectCores()))
-  
+  if(!mcParallel){
+    pel1 = unlist(lapply(1:ncol(x0), function(x){
+      return(pel1_beta(cl, P, sample_size, interm_size, A = x, nT,alpha, beta, x0, m0))}))
+  } else{
+    pel1 = unlist(mclapply(1:ncol(x0), function(x){
+      return(pel1_beta(cl, P, sample_size, interm_size, A = x, nT,alpha, beta, x0, m0))},
+      mc.cores = detectCores()))
+  }  
   tmp = order(pel1)[1]
   inform = tmp
   candidate = order(pel1)
   while (step < nA) {
     step = step +1
     candidate = candidate[-which(candidate == tmp)]
-    pel = rep(0,length(candidate))
-    pel = unlist(mclapply(candidate, function(x){
-      return(pel1_beta(cl, P, sample_size, interm_size, A = c(inform,x), nT, alpha, beta, x0, m0))},
-      mc.cores = detectCores()))
-    tmp = candidate[order(pel)[1]]
+    pel1 = rep(0,length(candidate))
+    if(!mcParallel){
+      pel1 = unlist(lapply(candidate, function(x){
+        return(pel1_beta(cl, P, sample_size, interm_size, A = c(inform,x), nT,alpha, beta, x0, m0))}))
+    } else{
+      pel1 = unlist(mclapply(candidate, function(x){
+        return(pel1_beta(cl, P, sample_size, interm_size, A = c(inform,x), nT,alpha, beta, x0, m0))},
+        mc.cores = detectCores()))
+    }
+    tmp = candidate[order(pel1)[1]]
     inform = c(inform, tmp)
   }
   return(inform)

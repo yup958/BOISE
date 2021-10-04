@@ -10,7 +10,7 @@ clustering over targets (with dpmm_beta.R to get cl_sample object). This functio
 computes and minimizes posterior expected loss and returns an informer set A of size nA compounds.
 }
 \usage{
-Boise(cl_sample, sample_size, interm_size, nA, nT, alpha, beta, x0, m0)
+Boise(cl_sample, sample_size, interm_size, nA, nT, alpha, beta, x0, m0, mcParallel = F)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -40,6 +40,9 @@ Initial bioactivity data.
 }
   \item{m0}{
 Chinese restaurant prior mass m0
+}
+  \item{mcParallel}{
+An option for parallel computing to accelarate informer selection. The default if False. If set to be true, parallel::mcapply would be used in calculate PEL1 loss. It doesn't work for Windows users.
 }
 }
 \details{
@@ -73,7 +76,7 @@ alpha = rep(mean(x0,na.rm = T),ncol(x0))
 beta = 1-alpha
 cl_sample = dpmm_beta(x0, alpha, beta, m0=15, burn_in=500, sample_size=10, thinning=10)
 interm_size = 1000
-A = Boise(cl_sample, sample_size = 10, interm_size = 1000, nA = 2, nT = 10, alpha, beta, x0, m0 = 15)
+A = Boise(cl_sample, sample_size = 10, interm_size = 1000, nA = 2, nT = 10, alpha, beta, x0, m0 = 15, mcParallel = F)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

@@ -1,6 +1,6 @@
-# Bayes Optimal Informer SEts
+# R package for Bayes Optimal Informer SEts (BOISE)
 
-This is Github repo for BOISE package
+This is GitHub repo for BOISE package
 
 ## For BOISE R package installation
 

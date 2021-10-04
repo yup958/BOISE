@@ -52,10 +52,10 @@ cl_sample = dpmm_beta(train, alpha, beta, m0, burn_in, sample_size, thinning)
 nA = 2
 nT = 36
 interm_size = 1000
-inform = Boise(cl_sample, sample_size, interm_size, nA, nT, alpha, beta, x0 = train, m0)
+inform = Boise(cl_sample, sample_size, interm_size, nA, nT, alpha, beta, x0 = train, m0, mcParallel = F)
 ## Add 1 more informer
 inform = Boise_Aug(cl_sample, sample_size, interm_size, nT, alpha, beta, train, m0,
-                    inform, nAdd = 1)
+                    inform, nAdd = 1, mcParallel = F)
 ## To maintain consistency, we would keep the initial clustering samples 
 ## and use the same assignments in all the computations.
 nef.result = Evaluate(cl_sample,inform, measure = "nef", percent = 0.1, test,train,

@@ -1,5 +1,6 @@
 Boise_Aug <-
-function(cl_sample, sample_size, interm_size, nT, alpha, beta, x0, m0, inform, nAdd){
+function(cl_sample, sample_size, interm_size, nT, alpha, beta, x0, m0, inform, nAdd,
+         mcParallel = FALSE){
   #source("clust_sum.R")
   #source("npel1.R")
   if (!require('parallel')) {
@@ -35,11 +36,16 @@ function(cl_sample, sample_size, interm_size, nT, alpha, beta, x0, m0, inform, n
   step = 1
   candidate = (1:ncol(x0))[-inform]
   while (step <= nAdd) {
-    pel = rep(0,length(candidate))
-    pel = unlist(mclapply(candidate, function(x){
-      return(pel1_beta(cl, P, sample_size, interm_size, A = c(inform,x), nT,alpha, beta, x0, m0))},
-      mc.cores = detectCores()))
-    tmp = candidate[order(pel)[1]]
+    pel1 = rep(0,length(candidate))
+    if(!mcParallel){
+      pel1 = unlist(lapply(candidate, function(x){
+        return(pel1_beta(cl, P, sample_size, interm_size, A = c(inform,x), nT,alpha, beta, x0, m0))}))
+    } else{
+      pel1 = unlist(mclapply(candidate, function(x){
+        return(pel1_beta(cl, P, sample_size, interm_size, A = c(inform,x), nT,alpha, beta, x0, m0))},
+        mc.cores = detectCores()))
+    }
+    tmp = candidate[order(pel1)[1]]
     inform = c(inform, tmp)
     step = step + 1
     candidate = candidate[-which(candidate == tmp)]
