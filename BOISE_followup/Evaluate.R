@@ -38,6 +38,15 @@ function(cl_sample, inform, measure, percent,
     hit = sum(test)
     maxhit = min(hit,nTop)
     result = ((pred_hit/nTop - hit/ncol(train)) / (maxhit/nTop - hit/ncol(train)) + 1)/2
+  } else if(measure == 'selectivity_nef'){
+    nTop = round(ncol(train) * percent, 0)
+    top = order(Score,decreasing = T)[1:nTop]
+    selectivity_score = colMeans(train, na.rm = T)
+    test = test - selectivity_score
+    pred_hit = sum(test[top])
+    hit = sum(test)
+    maxhit = sum(sort(test, decreasing = T)[1:nTop])
+    result = ((pred_hit/nTop - hit/ncol(train)) / (maxhit/nTop - hit/ncol(train)) + 1)/2
   } else if(measure == "rocauc"){
     rocobj = pROC::roc(test,Score)
     result = rocobj$auc

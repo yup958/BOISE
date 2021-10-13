@@ -50,6 +50,7 @@ M_generate <- function(P){
 package_cvboise <- function(M, m0, nA, nT){
   roc_results = rep(0, nrow(M))
   nef_results = rep(0, nrow(M))
+  selective_nef = rep(0, nrow(M))
   for (i in 1:nrow(M)) {
     train = M[-i, ]
     test = M[i, ]
@@ -62,13 +63,16 @@ package_cvboise <- function(M, m0, nA, nT){
                               sample_size=20, a, b, m0)
     nef_results[i] = BOISE::Evaluate(cl_sample, informer, "nef", percent=0.1,test, train, nT,
                               sample_size=20, a, b, m0)
+    selective_nef[i] = BOISE::Evaluate(cl_sample, informer, "selectivity_nef", percent=0.1,test, train, nT,
+                                sample_size=20, a, b, m0)
   }
-  return(c(roc_results, nef_results))
+  return(c(roc_results, nef_results, selective_nef))
 }
 
 cvboise <- function(M, m0, nA, nT){
   roc_results = rep(0, nrow(M))
   nef_results = rep(0, nrow(M))
+  selective_nef = rep(0, nrow(M))
   for (i in 1:nrow(M)) {
     train = M[-i, ]
     test = M[i, ]
@@ -81,13 +85,72 @@ cvboise <- function(M, m0, nA, nT){
                               sample_size=20, a, b, m0)
     nef_results[i] = Evaluate(cl_sample, informer, "nef", percent=0.1,test, train, nT,
                               sample_size=20, a, b, m0)
+    selective_nef[i] = Evaluate(cl_sample, informer, "selectivity_nef", percent=0.1,test, train, nT,
+                              sample_size=20, a, b, m0)
   }
-  return(c(roc_results, nef_results))
+  return(c(roc_results, nef_results, selective_nef))
 }
 
+### Simulation generated from CRP. 
 set.seed(11)
 N = 10
-results_mat = matrix(0, nrow = N, ncol = 60)
+results_mat = matrix(0, nrow = N, ncol = 90)
+results_m0_lo = list(old = results_mat, new = results_mat)
+results_m0_mid = list(old = results_mat, new = results_mat)
+results_m0_hi = list(old = results_mat, new = results_mat)
+
+for (i in 1:N) {
+  print(i)
+  alpha = 0.1
+  beta = 0.9
+  
+  # m0 = 3 generating matrices
+  cl = BOISE::Initial_beta(x0 = matrix(0, 30, 50), m0 = 3)
+  P_m0_lo = matrix(0,30,50)
+  probs = rbeta(50 * cl$K, alpha, beta)
+  dim(probs) = c(cl$K, 50)
+  for (r in 1:30) {
+    P_m0_lo[r, ] = probs[cl$C[r], ]
+  }
+  M = M_generate(P_m0_lo)
+  m0 = m0_Find(M, lower = 2, upper = 10)
+  results_m0_lo$old[i,] = package_cvboise(M, m0 = m0, nA = 5, nT = 10)
+  results_m0_lo$new[i,] = cvboise(M, m0 = m0, nA = 5, nT = 10)
+  
+  # m0 = 6 generating matrices
+  cl = BOISE::Initial_beta(x0 = matrix(0, 30, 50), m0 = 6)
+  P_m0_mid = matrix(0,30,50)
+  probs = rbeta(50 * cl$K, alpha, beta)
+  dim(probs) = c(cl$K, 50)
+  for (r in 1:30) {
+    P_m0_mid[r, ] = probs[cl$C[r], ]
+  }
+  M = M_generate(P_m0_mid)
+  m0 = m0_Find(M, lower = 2, upper = 10)
+  results_m0_mid$old[i,] = package_cvboise(M, m0 = m0, nA = 5, nT = 10)
+  results_m0_mid$new[i,] = cvboise(M, m0 = m0, nA = 5, nT = 10)
+  
+  # m0 = 10 generating matrices
+  cl = BOISE::Initial_beta(x0 = matrix(0, 30, 50), m0 = 9)
+  P_m0_hi = matrix(0,30,50)
+  probs = rbeta(50 * cl$K, alpha, beta)
+  dim(probs) = c(cl$K, 50)
+  for (r in 1:30) {
+    P_m0_hi[r, ] = probs[cl$C[r], ]
+  }
+  M = M_generate(P_m0_hi)
+  m0 = m0_Find(M, lower = 1, upper = 10)
+  results_m0_hi$old[i,] = package_cvboise(M, m0 = m0, nA = 5, nT = 10)
+  results_m0_hi$new[i,] = cvboise(M, m0 = m0, nA = 5, nT = 10)
+}
+save(list = c("results_m0_lo","results_m0_mid","results_m0_hi"), 
+     file = "penalized_loss_compar_synthetic_with_CRP_result.RData")
+
+
+### Simulation as in revised BOISE paper, fully / half / none clustering
+set.seed(11)
+N = 10
+results_mat = matrix(0, nrow = N, ncol = 90)
 results_full_cluster = list(old = results_mat, new = results_mat)
 results_half_cluster = list(old = results_mat, new = results_mat)
 results_none_cluster = list(old = results_mat, new = results_mat)
@@ -131,7 +194,7 @@ for (i in 1:N) {
 save(list = c("results_full_cluster","results_half_cluster","results_none_cluster"), 
      file = "penalized_loss_compar_result.RData")
 
-### comparison
+### Plot comparison
 m = 30
 k = 10
 title_size = 18
@@ -139,7 +202,7 @@ axis_title_size = 16
 axis_text_size = 16
 temp = data.frame("ROCAUC" = rep(0, 2*k*m), "Penalization" = c(rep("No", k*m),
                                                      rep("Yes",k*m)))
-temp$ROCAUC = c(as.vector(results_full_cluster$old[1:k, 1:m]), as.vector(results_full_cluster$new[1:k, 1:m]))
+temp$ROCAUC = c(as.vector(results_m0_lo$old[1:k, 1:m]), as.vector(results_m0_lo$new[1:k, 1:m]))
 temp$Penalization = as.factor(temp$Penalization)
 temp$Penalization <- factor(temp$Penalization, levels =c("No","Yes"))
 p1 <- ggplot(temp, aes(x = Penalization, y = ROCAUC, fill = Penalization)) +  
@@ -149,12 +212,12 @@ p1 <- ggplot(temp, aes(x = Penalization, y = ROCAUC, fill = Penalization)) +
                                "#000000"))+
   theme(legend.position="none") + 
   stat_summary(fun.y=median, geom="point", size=1, color="white") +
-  labs(title="ROCAUC on Fully-clustered Datasets") +
+  labs(title="ROCAUC with m0 = 3") +
   theme(plot.title = element_text(hjust = 0.5, size = title_size),
         axis.title = element_text(size = axis_title_size),
         axis.text = element_text(size = axis_text_size))
 
-temp$ROCAUC = c(as.vector(results_half_cluster$old[1:k, 1:m]), as.vector(results_half_cluster$new[1:k, 1:m]))
+temp$ROCAUC = c(as.vector(results_m0_mid$old[1:k, 1:m]), as.vector(results_m0_mid$new[1:k, 1:m]))
 p2 <- ggplot(temp, aes(x = Penalization, y = ROCAUC, fill = Penalization)) +  
   # geom_violin(scale = "width", trim = T, adjust = 0.5 )+
   geom_boxplot(width = 0.5) + 
@@ -162,12 +225,12 @@ p2 <- ggplot(temp, aes(x = Penalization, y = ROCAUC, fill = Penalization)) +
                                "#000000"))+
   theme(legend.position="none") + 
   stat_summary(fun.y=median, geom="point", size=1, color="white") +
-  labs(title="ROCAUC on Half-clustered Datasets") +
+  labs(title="ROCAUC with m0 = 6") +
   theme(plot.title = element_text(hjust = 0.5, size = title_size),
         axis.title = element_text(size = axis_title_size),
         axis.text = element_text(size = axis_text_size))
 
-temp$ROCAUC = c(as.vector(results_none_cluster$old[1:k, 1:m]), as.vector(results_none_cluster$new[1:k, 1:m]))
+temp$ROCAUC = c(as.vector(results_m0_hi$old[1:k, 1:m]), as.vector(results_m0_hi$new[1:k, 1:m]))
 p3 <- ggplot(temp, aes(x = Penalization, y = ROCAUC, fill = Penalization)) +  
   # geom_violin(scale = "width", trim = T, adjust = 0.5 )+
   geom_boxplot(width = 0.5) + 
@@ -175,14 +238,14 @@ p3 <- ggplot(temp, aes(x = Penalization, y = ROCAUC, fill = Penalization)) +
                                "#000000"))+
   theme(legend.position="none") + 
   stat_summary(fun.y=median, geom="point", size=1, color="white") +
-  labs(title="ROCAUC on None-clustered Datasets") +
+  labs(title="ROCAUC with m0 = 9") +
   theme(plot.title = element_text(hjust = 0.5, size = title_size),
         axis.title = element_text(size = axis_title_size),
         axis.text = element_text(size = axis_text_size))
 
 temp = data.frame("NEF10" = rep(0, 2*k*m), "Penalization" = c(rep("No", k*m),
                                                               rep("Yes",k*m)))
-temp$NEF10 = c(as.vector(results_full_cluster$old[1:k, (m+1):(2*m)]), as.vector(results_full_cluster$new[1:k, (m+1):(2*m)]))
+temp$NEF10 = c(as.vector(results_m0_lo$old[1:k, (m+1):(2*m)]), as.vector(results_m0_lo$new[1:k, (m+1):(2*m)]))
 temp$Penalization = as.factor(temp$Penalization)
 temp$Penalization <- factor(temp$Penalization, levels =c("No","Yes"))
 p4 <- ggplot(temp, aes(x = Penalization, y = NEF10, fill = Penalization)) +  
@@ -192,12 +255,12 @@ p4 <- ggplot(temp, aes(x = Penalization, y = NEF10, fill = Penalization)) +
                                "#000000"))+
   theme(legend.position="none") + 
   stat_summary(fun.y=median, geom="point", size=1, color="white") +
-  labs(title="NEF10 on Fully-clustered Datasets") +
+  labs(title="NEF10 with m0 = 3") +
   theme(plot.title = element_text(hjust = 0.5, size = title_size),
         axis.title = element_text(size = axis_title_size),
         axis.text = element_text(size = axis_text_size))
 
-temp$NEF10 = c(as.vector(results_half_cluster$old[1:k, (m+1):(2*m)]), as.vector(results_half_cluster$new[1:k, (m+1):(2*m)]))
+temp$NEF10 = c(as.vector(results_m0_mid$old[1:k, (m+1):(2*m)]), as.vector(results_m0_mid$new[1:k, (m+1):(2*m)]))
 p5 <- ggplot(temp, aes(x = Penalization, y = NEF10, fill = Penalization)) +  
   # geom_violin(scale = "width", trim = T, adjust = 0.5 )+
   geom_boxplot(width = 0.5) + 
@@ -205,12 +268,12 @@ p5 <- ggplot(temp, aes(x = Penalization, y = NEF10, fill = Penalization)) +
                                "#000000"))+
   theme(legend.position="none") + 
   stat_summary(fun.y=median, geom="point", size=1, color="white") +
-  labs(title="NEF10 on Half-clustered Datasets") +
+  labs(title="NEF10 with m0 = 6") +
   theme(plot.title = element_text(hjust = 0.5, size = title_size),
         axis.title = element_text(size = axis_title_size),
         axis.text = element_text(size = axis_text_size))
 
-temp$NEF10 = c(as.vector(results_none_cluster$old[1:k, (m+1):(2*m)]), as.vector(results_none_cluster$new[1:k, (m+1):(2*m)]))
+temp$NEF10 = c(as.vector(results_m0_hi$old[1:k, (m+1):(2*m)]), as.vector(results_m0_hi$new[1:k, (m+1):(2*m)]))
 p6 <- ggplot(temp, aes(x = Penalization, y = NEF10, fill = Penalization)) +  
   # geom_violin(scale = "width", trim = T, adjust = 0.5 )+
   geom_boxplot(width = 0.5) + 
@@ -218,7 +281,7 @@ p6 <- ggplot(temp, aes(x = Penalization, y = NEF10, fill = Penalization)) +
                                "#000000"))+
   theme(legend.position="none") + 
   stat_summary(fun.y=median, geom="point", size=1, color="white") +
-  labs(title="NEF10 on None-clustered Datasets") +
+  labs(title="NEF10 with m0 = 6") +
   theme(plot.title = element_text(hjust = 0.5, size = title_size),
         axis.title = element_text(size = axis_title_size),
         axis.text = element_text(size = axis_text_size))
@@ -226,3 +289,46 @@ p6 <- ggplot(temp, aes(x = Penalization, y = NEF10, fill = Penalization)) +
 myGrobs <- list(p4,p5,p6,p1,p2,p3)
 gridExtra::grid.arrange(grobs = myGrobs, nrow = 2,ncol = 3 )
 
+
+temp$NEF10 = c(as.vector(results_m0_lo$old[1:k, (2*m+1):(3*m)]), as.vector(results_m0_lo$new[1:k, (2*m+1):(3*m)]))
+temp$Penalization = as.factor(temp$Penalization)
+temp$Penalization <- factor(temp$Penalization, levels =c("No","Yes"))
+p7 <- ggplot(temp, aes(x = Penalization, y = NEF10, fill = Penalization)) +  
+  # geom_violin(scale = "width", trim = T, adjust = 0.5 )+
+  geom_boxplot(width = 0.5) + 
+  scale_fill_manual(values = c("#009E73","#D55E00",
+                               "#000000"))+
+  theme(legend.position="none") + 
+  stat_summary(fun.y=median, geom="point", size=1, color="white") +
+  labs(title="Synthetic Data with m0 = 3", y = "Selectivity NEF10") +
+  theme(plot.title = element_text(hjust = 0.5, size = title_size),
+        axis.title = element_text(size = axis_title_size),
+        axis.text = element_text(size = axis_text_size))
+
+temp$NEF10 = c(as.vector(results_m0_mid$old[1:k, (2*m+1):(3*m)]), as.vector(results_m0_mid$new[1:k, (m+1):(2*m)]))
+p8 <- ggplot(temp, aes(x = Penalization, y = NEF10, fill = Penalization)) +  
+  # geom_violin(scale = "width", trim = T, adjust = 0.5 )+
+  geom_boxplot(width = 0.5) + 
+  scale_fill_manual(values = c("#009E73","#D55E00",
+                               "#000000"))+
+  theme(legend.position="none") + 
+  stat_summary(fun.y=median, geom="point", size=1, color="white") +
+  labs(title="Synthetic Data with m0 = 6", y = "Selectivity NEF10") +
+  theme(plot.title = element_text(hjust = 0.5, size = title_size),
+        axis.title = element_text(size = axis_title_size),
+        axis.text = element_text(size = axis_text_size))
+
+temp$NEF10 = c(as.vector(results_m0_hi$old[1:k, (2*m+1):(3*m)]), as.vector(results_m0_hi$new[1:k, (m+1):(2*m)]))
+p9 <- ggplot(temp, aes(x = Penalization, y = NEF10, fill = Penalization)) +  
+  # geom_violin(scale = "width", trim = T, adjust = 0.5 )+
+  geom_boxplot(width = 0.5) + 
+  scale_fill_manual(values = c("#009E73","#D55E00",
+                               "#000000"))+
+  theme(legend.position="none") + 
+  stat_summary(fun.y=median, geom="point", size=1, color="white") +
+  labs(title="Synthetic Data with m0 = 9", y = "Selectivity NEF10") +
+  theme(plot.title = element_text(hjust = 0.5, size = title_size),
+        axis.title = element_text(size = axis_title_size),
+        axis.text = element_text(size = axis_text_size))
+myGrobs <- list(p7,p8,p9)
+gridExtra::grid.arrange(grobs = myGrobs, nrow = 1,ncol = 3 )
