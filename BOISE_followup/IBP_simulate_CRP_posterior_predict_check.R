@@ -1,12 +1,12 @@
 ### Simulate x0 with IBP average
 setwd("~/RAwork/BOISE/BOISE_followup/")
-m = 100 # number of targets
+m = 223 # number of targets
 n = 200 # number of compounds
 set.seed(2)
 
 ## Assignments with IBP prior
 source('IBP_prior.R')
-m0 = 10
+m0 = 5
 Z = ibp_prior(m0 = m0, N = m)
 while(sum(rowSums(Z) == 0) > 0){
   Z = ibp_prior(m0=m0, N=m)
@@ -142,3 +142,24 @@ print(count / sample_size)
 ### m0 = 5, p-val = 0.044, 27 features, the CRP find m0 = 4, 10 - 20 clusters
 ### m0 = 10, p-val = 0.02, 46 features, the CRP find m0 = 5, 10 - 30 clusters; if use m0=10, p-val = 0
 
+## Visualization CRP result as a Z matrix, with lof(Z) transformation, for comparison with IBP
+IBP_Z = Z
+load('~/Drug_Discovery/BOISE/CR_BetaPrior/cl.RData')
+cl_sample = cl[[1]]
+cl = list(K = cl_sample$KK[1], N = cl_sample$NN[1, ], C = cl_sample$CC[1, ])
+Z= matrix(0, nrow = length(cl$C), ncol = cl$K)
+for(r in 1:length(cl$C)){
+  Z[r, cl$C[r]] = 1
+}
+### A lof function that convert a CRP clustering sample to a Z matrix under equivalent class
+lof <- function(Z){
+  binary_str = apply(Z, 2, function(z){
+    return(paste(z, collapse = ""))
+  })
+  col_order = order(binary_str, decreasing = T)
+  return(Z[, col_order])
+}
+Z = lof(Z)
+par(mfrow = c(1,2))
+plot(IBP_Z, main = 'Z matrix of IBP (Synthetic)',xlab = 'Feature', ylab = 'Target')
+plot(Z, main = 'Z matrix of CRP (PKIS1)',xlab = 'Feature', ylab = 'Target')

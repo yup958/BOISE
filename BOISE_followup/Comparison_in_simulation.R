@@ -193,7 +193,7 @@ for (i in 1:N) {
 }
 save(list = c("results_full_cluster","results_half_cluster","results_none_cluster"), 
      file = "penalized_loss_compar_result.RData")
-
+load("./Simulation_res/penalized_loss_compar_synthetic_with_CRP_result.RData")
 ### Plot comparison
 m = 30
 k = 10
@@ -300,7 +300,7 @@ p7 <- ggplot(temp, aes(x = Penalization, y = NEF10, fill = Penalization)) +
                                "#000000"))+
   theme(legend.position="none") + 
   stat_summary(fun.y=median, geom="point", size=1, color="white") +
-  labs(title="Synthetic Data with m0 = 3", y = "Selectivity NEF10") +
+  labs(title="Synthetic Data with m0 = 3", y = "revNEF10") +
   theme(plot.title = element_text(hjust = 0.5, size = title_size),
         axis.title = element_text(size = axis_title_size),
         axis.text = element_text(size = axis_text_size))
@@ -313,7 +313,7 @@ p8 <- ggplot(temp, aes(x = Penalization, y = NEF10, fill = Penalization)) +
                                "#000000"))+
   theme(legend.position="none") + 
   stat_summary(fun.y=median, geom="point", size=1, color="white") +
-  labs(title="Synthetic Data with m0 = 6", y = "Selectivity NEF10") +
+  labs(title="Synthetic Data with m0 = 6", y = "revNEF10") +
   theme(plot.title = element_text(hjust = 0.5, size = title_size),
         axis.title = element_text(size = axis_title_size),
         axis.text = element_text(size = axis_text_size))
@@ -326,7 +326,7 @@ p9 <- ggplot(temp, aes(x = Penalization, y = NEF10, fill = Penalization)) +
                                "#000000"))+
   theme(legend.position="none") + 
   stat_summary(fun.y=median, geom="point", size=1, color="white") +
-  labs(title="Synthetic Data with m0 = 9", y = "Selectivity NEF10") +
+  labs(title="Synthetic Data with m0 = 9", y = "revNEF10") +
   theme(plot.title = element_text(hjust = 0.5, size = title_size),
         axis.title = element_text(size = axis_title_size),
         axis.text = element_text(size = axis_text_size))
