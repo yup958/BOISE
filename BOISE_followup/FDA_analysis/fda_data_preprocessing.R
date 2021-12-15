@@ -1,5 +1,5 @@
 ## 1st round: largest complete data matrix
-setwd('~/RAwork/BOISE/BOISE_followup/')
+setwd('~/RAwork/BOISE/BOISE_followup/FDA_analysis/')
 set.seed(2)
 load('fda_data_short.RData')
 assay = unique(data_short$PUBCHEM_AID)
@@ -154,4 +154,11 @@ mtext(text=seq(0, 900, 50), side=1, line=0.5, at=seq(0, 900, 50) / 933, las=1, c
 print(apply(block_res$col_block, 1, sum))
 print(apply(block_res$row_block, 1, sum))
 
-
+col_grp5 = which(block_res$col_block[5,]>0)
+cpds = colnames(block_res$col_block[,col_grp5])
+row_grp5 = which(block_res$row_block[5,]>0)
+assays = colnames(block_res$row_block[,row_grp5])
+A = dat[assays, cpds]
+counts = apply(A,2,function(x){return(sum(x, na.rm = T))})
+sort(counts, decreasing = T)
+save(list = c('block_res', 'dat', 'A', 'rotate'), file = 'fda_data_rearrange_w_blocks.RData')

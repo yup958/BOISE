@@ -1,4 +1,4 @@
-setwd('~/RAwork/BOISE/BOISE_followup/')
+setwd('~/RAwork/BOISE/BOISE_followup/FDA_analysis/')
 load('fda_data_rearranged.RData')
 block_res$row_block = block_res$row_block[1:5,]
 block_res$col_block = block_res$col_block[1:5,]
@@ -78,14 +78,14 @@ for(k in 1:5){
   active_cid = which(block_res$col_block[k, ] > 0)
   cpds = colnames(block_res$col_block[, active_cid])
   A = dat[, cpds] 
-  a = rep(mean(A, na.rm = T), ncol(A))
+  a = rep(mean(dat, na.rm = T), ncol(A))
   b = 1 - a
   m0 = m0_selections[k]
   cl_samples[[k]] = dpmm_beta(A, a, b, m0, burn_in = 1000, sample_size=sample_size, thinning = 10)
 }
 
 ### Posterior predictive check on non-missing entries?
-load('clust_res_whole_mat.RData')
+load('fda_clust_res_whole_mat.RData')
 generate_posterior_parameters <- function(cl, x0, alpha, beta){
   m = nrow(x0)
   n = ncol(x0)
@@ -164,7 +164,7 @@ print(real_log_lik / sample_size / iter) ## 21037.1
 
 
 ## for clustering in groups
-load('clust_res_in_grps.RData')
+load('fda_clust_res_in_grps.RData')
 sample_size=100
 iter = 100
 count = 0
@@ -210,8 +210,3 @@ for (i in 1:sample_size) {
   }
 }
 print(real_log_lik / sample_size / iter) ## 18395.15
-
-
-counts = apply(cl_samples[[2]]$NN,2,mean)
-counts = counts[counts>1]
-counts
