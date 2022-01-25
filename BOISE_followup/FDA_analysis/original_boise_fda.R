@@ -43,7 +43,7 @@ summary(baseline_roc)
 
 ### load clustering results, informer selection from Condor
 load('clust_res_10.RData')
-inform = c(25, 195, 264, 285, 525, 189, 102, 259, 32, 205, 112, 71,103, 95, 138)
+inform = c(25, 195, 264, 285, 525, 189, 102, 259, 32, 205, 112, 71,103, 95, 138,141)
 inform_CID = colnames(train)[inform]
 nT = as.integer(ncol(train) * 0.1)
 
@@ -68,8 +68,8 @@ Evaluate <-
     }
     post_probs = post_probs / (sum(post_probs))
     Score = post_probs %*% post_thetas
-    Score[inform[which(xA==1)]] = rep(max(Score) + 1, sum(xA))
-    Score[inform[which(xA==0)]] = rep(min(Score) - 1, nA - sum(xA))
+    Score[inform[which(xA==1)]] = rep(max(Score) + 1, sum(xA, na.rm = T))
+    Score[inform[which(xA==0)]] = rep(min(Score) - 1, sum(1-xA, na.rm = T))
     test = as.vector(test[complete_idx])
     Score = as.vector(Score[complete_idx])
     if(measure == "nef"){
@@ -115,7 +115,7 @@ roc_results = read.table('roc_results.txt', sep = ' ', header=T)
 nA_results = read.table('nA_results.txt', sep = ' ', header=T)
 nef_results = read.table('nef_results.txt', sep = ' ', header=T)
 
-for (k in 15:15) {
+for (k in 16:16) {
   nA_name = paste('nA_', as.character(k), sep = '')
   roc_name = paste('rocauc_', as.character(k), sep = '')
   #nef_name = paste('nef_', as.character(k), sep = '')

@@ -1,9 +1,9 @@
 ### Write/revise job list for Condor submission
 A = 1:933
-pel1_res = read.csv('~/CHTC_Downloads/Informer_16.txt', header = F, sep = ' ')
+pel1_res = read.csv('~/CHTC_Downloads/Block_Informer_15.txt', header = F, sep = ' ')
 pel1_res = pel1_res[order(pel1_res$V2),]
-pre_inform = c(25, 195, 264, 285, 525, 189, 102, 259, 32, 205, 112, 71, 103, 95,138)
-inform = pel1_res$V1[1] ## 25, 195, 264, 285, 525, 189,102, 259, 32, 205, 112, 71,103,95,138
+pre_inform = c(91, 10, 747, 85, 137, 525, 62, 189, 297, 470, 638, 82, 46, 713)
+inform = pel1_res$V1[1] ## 91, 10, 747, 85, 137, 525, 62, 189, 297, 470, 638, 82, 46, 713
 inform = c(pre_inform, inform)
 inform
 A = A[-which(A %in% inform)]

@@ -13,9 +13,13 @@ function (P, x0, xA, A, nT = 10, alpha, beta, m0){
   # p(xA|i in ck, C, x0)
   p[K + 1] = exp(sum(xA * log(alpha[A] / (alpha[A] + beta[A]))) + 
                    sum((1 - xA) * log(beta[A] / (alpha[A] + beta[A]))))
-  p[1:K] = apply(P[,1:m],1,function(q){
-    return(exp(sum(xA * log(q[A])) + sum((1-xA) * log(1 - q[A]))))
-  })
+  if (K==1){
+    p[K] = exp(sum(xA * log(P[A])) + sum((1-xA) * log(1 - P[A])))
+  } else{
+    p[1:K] = apply(P[,1:m], 1, function(q){
+      return(exp(sum(xA * log(q[A])) + sum((1-xA) * log(1 - q[A]))))
+    })
+  }
   
   theta[1:K,] = P[,1:m]
   if(length(A) == 1){
@@ -44,3 +48,4 @@ function (P, x0, xA, A, nT = 10, alpha, beta, m0){
   postls <- list(post_theta = post_theta, post_prob = post_prob)
   return(postls)
 }
+
