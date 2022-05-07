@@ -13,6 +13,7 @@ evaluate_interm <- function(cl, inform, train, test, m0_selection, block, row_sa
     n = ncol(sub_train)
     a = rep(mean(sub_train, na.rm = T), ncol(sub_train))
     b = 1 - a
+    ### revised for chemical clustering!!! V2 -> V1, 3 -> 2
     m0 = 1
     if(i %in% m0_selection$V2){
       m0 = m0_selection[which(m0_selection$V2 == i), 3] # retrieve m0 prior

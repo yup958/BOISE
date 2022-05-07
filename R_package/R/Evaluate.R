@@ -16,14 +16,15 @@ function(cl_sample, inform, measure, percent,
   xA = test[inform]
   nA=length(inform)
   m = ncol(train)
-  post_probs = matrix(0, 1, sample_size)
+  log_post_probs = matrix(0, 1, sample_size)
   post_thetas = matrix(0, sample_size, m)
   for (k in 1:sample_size){
     postls = pel2_beta(P[[k]], x0=train, xA, A=inform, nT, alpha, beta, m0)
-    post_probs[k] = postls$post_prob
+    log_post_probs[k] = postls$log_post_prob
     post_thetas[k, ] = postls$post_theta
   }
-  post_probs = post_probs / (sum(post_probs))
+  log_post_probs = log_post_probs - max(log_post_probs)
+  post_probs = exp(log_post_probs) / (sum(exp(log_post_probs)))
   Score = post_probs %*% post_thetas
   Score[inform[which(xA==1)]] = rep(max(Score) + 1, sum(xA))
   Score[inform[which(xA==0)]] = rep(min(Score) - 1, nA - sum(xA))

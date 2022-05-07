@@ -27,6 +27,7 @@ system.time({
 
 ## Baseline ROCAUC, no informers, just score with hit frequency
 baseline_roc = rep(NA,100)
+baseline_nef = rep(NA, 100)
 for (i in 1:100){
   Score = apply(train,2,function(x){return(mean(x, na.rm = T))})
   complete_idx = which(!is.na(test[i,]))
@@ -35,11 +36,19 @@ for (i in 1:100){
   if(sum(test[i,], na.rm = T) == 0){
     print('All observed responses are 0!')
   } else{
+    ##rocauc
     rocobj = pROC::roc(response = tmp, predictor = Score, quiet = TRUE)
     baseline_roc[i] = rocobj$auc
+    ##nef
+    nTop = round(length(tmp) * 0.1, 0)
+    top = order(Score,decreasing = T)[1:nTop]
+    pred_hit = sum(tmp[top])
+    hit = sum(tmp)
+    maxhit = min(hit,nTop)
+    baseline_nef[i] = ((pred_hit/nTop - hit/length(tmp)) / (maxhit/nTop - hit/length(tmp)) + 1)/2
   }
 }
-summary(baseline_roc)
+summary(baseline_nef)
 
 ### load clustering results, informer selection from Condor
 load('clust_res_10.RData')
@@ -77,22 +86,29 @@ Evaluate <-
         print('All observed responses are 0!')
         result = NA
       } else{
-        nTop = round(ncol(train) * percent, 0)
+        nTop = round(length(test) * percent, 0)
         top = order(Score,decreasing = T)[1:nTop]
         pred_hit = sum(test[top])
         hit = sum(test)
         maxhit = min(hit,nTop)
-        result = ((pred_hit/nTop - hit/ncol(train)) / (maxhit/nTop - hit/ncol(train)) + 1)/2
+        result = ((pred_hit/nTop - hit/length(test)) / (maxhit/nTop - hit/length(test)) + 1)/2
       }
     } else if(measure == 'selectivity_nef'){
-      nTop = round(ncol(train) * percent, 0)
-      top = order(Score,decreasing = T)[1:nTop]
-      selectivity_score = colMeans(train, na.rm = T)
-      test = test - selectivity_score
-      pred_hit = sum(test[top])
-      hit = sum(test)
-      maxhit = sum(sort(test, decreasing = T)[1:nTop])
-      result = ((pred_hit/nTop - hit/ncol(train)) / (maxhit/nTop - hit/ncol(train)) + 1)/2
+      if(sum(test, na.rm = T) == 0){
+        print('All observed responses are 0!')
+        result = NA
+      } else{
+        nTop = round(length(test) * percent, 0)
+        top = order(Score,decreasing = T)[1:nTop]
+        selectivity_score = colMeans(train, na.rm = T)
+        selectivity_score = as.vector(selectivity_score[complete_idx])
+        test = test - selectivity_score / 10
+        pred_hit = sum(test[top])
+        hit = sum(test)
+        maxhit = sum(sort(test, decreasing = T)[1:nTop])
+        result = ((pred_hit/nTop - hit/length(test)) / (maxhit/nTop - hit/length(test)) + 1)/2
+        ### not always positive if penalize, try different lambdas as penalization!!
+      }
     } else if(measure == "rocauc"){
       if(sum(test, na.rm = T) == 0){
         print('All observed responses are 0!')
@@ -114,13 +130,15 @@ Evaluate <-
 roc_results = read.table('roc_results.txt', sep = ' ', header=T)
 nA_results = read.table('nA_results.txt', sep = ' ', header=T)
 nef_results = read.table('nef_results.txt', sep = ' ', header=T)
+select_nef_results = read.table('nef_results.txt', sep = ' ', header=T)
 
-for (k in 16:16) {
+for (k in 1:15) {
+  print(k)
   nA_name = paste('nA_', as.character(k), sep = '')
-  roc_name = paste('rocauc_', as.character(k), sep = '')
-  #nef_name = paste('nef_', as.character(k), sep = '')
-  roc_results[, roc_name] = rep(NA, 100)
-  #nef_results[, nef_name] = rep(NA, 100)
+  #roc_name = paste('rocauc_', as.character(k), sep = '')
+  nef_name = paste('nef_', as.character(k), sep = '')
+  #roc_results[, roc_name] = rep(NA, 100)
+  nef_results[, nef_name] = rep(NA, 100)
   nA_results[, nA_name] = rep(0, 100)
   tmp_inform = inform[1:k]
   for (i in 1:100) {
@@ -128,16 +146,18 @@ for (k in 16:16) {
     valid_inform = intersect(complete_idx, tmp_inform)
     nA_results[i, nA_name] = length(valid_inform)
     if (length(valid_inform) >= 1){
-      roc_results[i, roc_name] = Evaluate(cl_sample, tmp_inform, measure = 'rocauc', percent = 0.1,
-                                       test=test[i,], train, nT, sample_size, a, b, m0)
-      #nef_results[i, nef_name] = Evaluate(cl_sample, tmp_inform, measure = 'nef', percent = 0.1,
-      #                                    test=test[i,], train, nT, sample_size, a, b, m0)
+      #roc_results[i, roc_name] = Evaluate(cl_sample, tmp_inform, measure = 'rocauc', percent = 0.1,
+      #                                 test=test[i,], train, nT, sample_size, a, b, m0)
+      nef_results[i, nef_name] = Evaluate(cl_sample, tmp_inform, measure = 'nef', percent = 0.15,
+                                          test=test[i,], train, nT, sample_size, a, b, m0)
     }
   }
+  print(summary(nef_results[,nef_name]))
 }
 write.table(nA_results, file = 'nA_results.txt',row.names = F)
 write.table(roc_results, file = 'roc_results.txt',row.names = F)
-write.table(nef_results, file = 'nef_results.txt',row.names = F)
+write.table(nef_results, file = 'nef15_results.txt',row.names = F)
+write.table(nef_results, file = 'revnef_results.txt',row.names = F)
 
 ## drop from 6 to 7
 worse_set = which(roc_results$rocauc_6 - roc_results$rocauc_7 > 0.05)

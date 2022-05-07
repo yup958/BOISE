@@ -59,9 +59,12 @@ score_cpd <- function(P, sub_train, sub_inform, nT,  m0, a, b, row_sample_size, 
         post_probs[k] = postls$post_prob
         post_thetas[k, ] = postls$post_theta
       }
+      # p(xA | x0)
+      post_prob = mean(post_probs)
+      # E(theta | x0, xA)
       post_probs = post_probs / (sum(post_probs))
       tmp_score = post_probs %*% post_thetas
-      Scores[[YA[i]]] = list(lg_wt = log(tab[i] / sum(tab)), 
+      Scores[[YA[i]]] = list(lg_wt = log(post_prob), 
                              sc = sort(tmp_score, decreasing = T)[1:min(nT, ncol(sub_train))])
     }
   }

@@ -1,6 +1,6 @@
 ## 1st round: largest complete data matrix
 setwd('~/RAwork/BOISE/BOISE_followup/FDA_analysis/')
-set.seed(2)
+set.seed(817)
 load('fda_data_short.RData')
 assay = unique(data_short$PUBCHEM_AID)
 cpd = unique(data_short$PUBCHEM_CID)
@@ -16,6 +16,24 @@ for (i in 1:nrow(data_short)) {
   }
 }
 mean(dat, na.rm = T)
+rm(data_short)
+
+test_id = c()
+while (length(test_id) < 30) {
+  id = sample(rownames(dat),1)
+  len_no_miss = sum(!is.na(dat[id,]))
+  if(len_no_miss > 400){
+    test_id = c(test_id, id)
+  }
+}
+apply(dat[test_id,],1, function(x){return(sum(!is.na(x)))})
+apply(dat[test_id,],1, function(x){return(sum(x, na.rm=T))})
+
+# nas = apply(dat, 1, function(x){return(sum(!is.na(x)))})
+# test_id = order(nas, decreasing = T)[1:10]
+# test = dat[test_id[c(9,10)],]
+# tmp = apply(test, 2, sum)
+# sum(!is.na(tmp))
 
 par(mfrow = c(1,2))
 row_counts = apply(dat, 1, function(x){return(mean(is.na(x)))})

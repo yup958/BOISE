@@ -78,7 +78,7 @@ for(k in 1:5){
   active_cid = which(block_res$col_block[k, ] > 0)
   cpds = colnames(block_res$col_block[, active_cid])
   A = dat[, cpds] 
-  a = rep(mean(dat, na.rm = T), ncol(A))
+  a = rep(mean(A, na.rm = T), ncol(A))
   b = 1 - a
   m0 = m0_selections[k]
   cl_samples[[k]] = dpmm_beta(A, a, b, m0, burn_in = 1000, sample_size=sample_size, thinning = 10)

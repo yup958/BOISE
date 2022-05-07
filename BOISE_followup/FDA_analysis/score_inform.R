@@ -2,7 +2,8 @@
 ### Analog to pel1_beta.R
 
 score_inform <- function(cl, inform, train, m0_selection, block,
-                         row_sample_size, interm_size, nT){
+                         row_sample_size, interm_size, nT,
+                         simplified = FALSE, thres = 15000){
   grp = max(cl)
   final_Scores = list()
   
@@ -14,6 +15,7 @@ score_inform <- function(cl, inform, train, m0_selection, block,
     n = ncol(sub_train)
     a = rep(mean(sub_train, na.rm = T), ncol(sub_train))
     b = 1 - a
+    ### 02/08/2022 revised for chemical clustering!!! V2 -> V1, 3 -> 2 
     m0 = 1
     if(i %in% m0_selection$V2){
       m0 = m0_selection[which(m0_selection$V2 == i), 3] # retrieve m0 prior
@@ -57,6 +59,11 @@ score_inform <- function(cl, inform, train, m0_selection, block,
           new_lg_wt = final_Scores[[xa]]$lg_wt + Scores[[new_xa]]$lg_wt
           tmp_Scores[[key]] = list(lg_wt = new_lg_wt, sc = new_sc)
         }
+      }
+      if(simplified & length(tmp_Scores) > thres){
+        lg_wt_low = unlist(lapply(tmp_Scores, function(x){return(unname(x$lg_wt))})) # list of lg_wts
+        lg_wt_low = sort(lg_wt_low, decreasing = T)[thres]
+        tmp_Scores = Filter(function(x) x$lg_wt >= lg_wt_low, tmp_Scores)
       }
       final_Scores = tmp_Scores
     }
