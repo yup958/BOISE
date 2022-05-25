@@ -61,10 +61,10 @@ for (id in 1:60) {
 write.table(roc_results, file = './results/chem_roc_results.txt',row.names = F)
 write.table(nef_results, file = './results/chem_nef_results.txt',row.names = F)
   
-baseline_roc = roc_results
-baseline_nef = nef_results
+baseline_roc = read.table('./results/chem_rdinfo_roc_results.txt', header = T)
+baseline_nef = read.table('./results/chem_rdinfo_nef_results.txt', header = T)
 iter = 25
-sample_size = 100
+row_sample_size = 100
 for (id in 1:60) {
   print(id)
   load(paste('~/CHTC_Downloads/FDA_cv/testid_', as.character(id), '_block.RData',sep=''))
@@ -72,7 +72,7 @@ for (id in 1:60) {
   a = rep(mean(train, na.rm = T), ncol(train))
   b = 1 - a
   nT = as.integer(ncol(train) * 0.1)
-  for (nA in 21:30) {
+  for (nA in (11:20)*10) {
     roc_name = paste('roc_', as.character(nA), sep = '')
     nef_name = paste('nef_', as.character(nA), sep = '')
     roc = 0
@@ -134,25 +134,26 @@ baseline_nef = baseline_nef[-58]
 
 ### Plots
 library(ggplot2)
-results = data.frame('Informer_size' = 1:30)
+results = data.frame('Informer_size' = (1:20)*10)
+cols = c(11, 21, 31:48)
 roc_results = read.table('./results/chem_roc_results.txt', sep = ' ', header=T)[-58,]
 results[,'Boise_block'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[2:31]
 roc_results = read.table('./results/chem_fast_roc_results.txt', sep = ' ', header=T)[-58,]
-results[,'fast_entropy'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[2:31]
+results[,'fast_entropy'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[cols]
 roc_results = read.table('./results/chem_fast_info_1_roc_results.txt', sep = ' ', header=T)[-58,]
-results[,'fast_pel1'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[2:31]
-# roc_results = read.table('./results/chem_rdinfo_roc_results.txt', sep = ' ', header=T)[-58,]
-# results[,'Boise_rand'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[2:31]
+results[,'fast_pel1'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[cols]
+roc_results = read.table('./results/chem_rdinfo_roc_results.txt', sep = ' ', header=T)[-58,]
+results[,'Boise_rand'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[cols]
 # results[, 'Baseline'] = rep(mean(baseline_roc, na.rm=T), 30)
 
 nef_results = read.table('./results/chem_nef_results.txt', sep = ' ', header=T)[-58,]
 results[,'Boise_block'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[2:31]
 nef_results = read.table('./results/chem_fast_nef_results.txt', sep = ' ', header=T)[-58,]
-results[,'fast_entropy'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[2:31]
+results[,'fast_entropy'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[cols]
 nef_results = read.table('./results/chem_fast_info_1_nef_results.txt', sep = ' ', header=T)[-58,]
-results[,'fast_pel1'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[2:31]
-# nef_results = read.table('./results/chem_rdinfo_nef_results.txt', sep = ' ', header=T)[-58,]
-# results[,'Boise_rand'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[2:31]
+results[,'fast_pel1'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[cols]
+nef_results = read.table('./results/chem_rdinfo_nef_results.txt', sep = ' ', header=T)[-58,]
+results[,'Boise_rand'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[cols]
 # results[, 'Baseline'] = rep(mean(baseline_nef, na.rm=T), 30)
 
 legend_title_size = 10
@@ -182,23 +183,23 @@ p4 <- ggplot(results)+
         #legend.position = c(0.85,0.2),
         legend.position = 'none')
 
-p4 <- ggplot(results)+
-  geom_point(mapping = aes(x = Informer_size, y = Boise_block))+
-  geom_line(mapping = aes(x = Informer_size, y = Boise_block, color = 'block_Boise'))+
+p3 <- ggplot(results)+
+  geom_point(mapping = aes(x = Informer_size, y = Boise_rand))+
+  geom_line(mapping = aes(x = Informer_size, y = Boise_rand, color = 'rand_Boise'))+
   geom_point(mapping = aes(x = Informer_size, y = fast_entropy))+
   geom_line(mapping = aes(x = Informer_size, y = fast_entropy, color = 'fast_entropy'))+
   geom_point(mapping = aes(x = Informer_size, y = fast_pel1))+
   geom_line(mapping = aes(x = Informer_size, y = fast_pel1, color = 'fast_pel1'))+
-  scale_color_manual(name = "Methods", values = c("block_Boise" = "darkblue",
-                                                  'fast_entropy' = 'purple',
-                                                  'fast_pel1' = 'darksalmon',
-                                                  "Baseline" = "red"))+
-  scale_x_continuous('Informer sizes', breaks = seq(1,29, by=2))+
-  #scale_y_continuous('ROCAUC mean', limits = c(0.789, 0.85))+
-  scale_y_continuous('NEF mean', limits = c(0.676, 0.789))+
+  scale_color_manual(name = "Methods", values = c("rand_Boise" = "red",
+                                                  'fast_entropy' = 'darkblue',
+                                                  'fast_pel1' = 'purple'))+
+  scale_x_continuous('Informer sizes', breaks = seq(10,200, by=10))+
+  scale_y_continuous('ROCAUC mean', limits = c(0.806, 0.950))+
+  #scale_y_continuous('NEF mean', limits = c(0.692, 0.918))+
+  labs(title = "Clustering on separate matrices")+
   theme(axis.title = element_text(size = axis_title_size),
         axis.text = element_text(size = axis_text_size),
         legend.title = element_text(size = legend_title_size),
         legend.text = element_text(size = legend_text_size),
         #legend.position = c(0.85,0.2),
-        legend.position = 'none')
+        legend.position = c(0.85,0.2))

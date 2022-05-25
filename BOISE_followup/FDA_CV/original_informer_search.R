@@ -16,7 +16,7 @@ b = 1 - a
 sample_size = length(cl_sample$KK)
 P = clust_sum(cl_sample, train, sample_size, a, b)
 
-informs = read.table('/z/Comp/boise/results/orig_informer_1.txt')
+informs = read.table('/z/Comp/boise/results/orig_new_informer_1.txt')
 pre_inform = as.numeric(unlist(strsplit(as.character(informs$V2[id]), split = ' ')))
 #pre_inform = c()
 inform = c(pre_inform, A)
@@ -56,6 +56,7 @@ rm(XA)
 ### PEL 2 calculation
 lg_wts = rep(0, l)
 pel2s = rep(0, l)
+unit_vec = matrix(1, ncol(train),1)
 for (i in 1:l) {
   xA = as.numeric(strsplit(YA[i], "")[[1]])
   log_post_probs = matrix(0, 1, sample_size)
@@ -73,7 +74,9 @@ for (i in 1:l) {
   # E(theta | x0, xA)
   post_probs = exp(log_post_probs) / (sum(exp(log_post_probs)))
   Score = post_probs %*% post_thetas
-  pel2s[i] = sum(sort(1-Score)[1:nT])
+  #pel2s[i] = sum(sort(1-Score)[1:nT])
+  Score = matrix(Score, ncol=1)
+  pel2s[i] = -sum(abs(Score %*% t(unit_vec) - unit_vec %*% t(Score)))
 }
 ## calculate PEL1
 lg_wts = lg_wts - max(lg_wts)

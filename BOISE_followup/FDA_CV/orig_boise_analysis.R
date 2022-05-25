@@ -1,33 +1,34 @@
 setwd('~/RAwork/BOISE/BOISE_followup/FDA_CV/')
 set.seed(817)
 
-nA = 20
-informs = read.table(paste('~/CHTC_Downloads/FDA_cv/Informer_', as.character(nA), '.txt', sep=''), header = F)
+nA = 11
+informs = read.table(paste('~/CHTC_Downloads/FDA_cv/orig_new_informer_', as.character(nA), '.txt', sep=''), header = F)
 chr_inform = unlist(lapply(informs$V2, function(x){return(paste(x, collapse = ','))}))
 informs$V2 = chr_inform
 informs$V3 = NULL
-write.table(informs, file = paste('~/CHTC_Downloads/FDA_cv/Informer_', as.character(nA), '.txt',sep=''),
+write.table(informs, file = paste('~/CHTC_Downloads/FDA_cv/orig_new_informer_', as.character(nA), '.txt',sep=''),
             row.names = F, col.names = F)
 
-pre_informs = read.table(paste('~/CHTC_Downloads/FDA_cv/Informer_', as.character(nA-1),'.txt', sep=''), header = F)
-informs = read.table(paste('~/CHTC_Downloads/FDA_cv/Informer_', as.character(nA), '.txt',sep=''), header = F)
-for (id in 1:30) {
+pre_informs = read.table(paste('~/CHTC_Downloads/FDA_cv/orig_new_informer_', as.character(nA-1),'.txt', sep=''), header = F)
+informs = read.table(paste('~/CHTC_Downloads/FDA_cv/orig_new_informer_', as.character(nA), '.txt',sep=''), header = F)
+for (id in 1:60) {
   pre_inform = pre_informs$V2[id]
   A = informs$V2[id]
   inform = paste(pre_inform, A, collapse = ',')
   informs$V2[id] = inform
 }
-write.table(informs, file = paste('~/CHTC_Downloads/FDA_cv/Informer_', as.character(nA), '.txt',sep=''),
+write.table(informs, file = paste('~/CHTC_Downloads/FDA_cv/orig_new_informer_', as.character(nA), '.txt',sep=''),
             row.names = F, col.names = F)
 
 # roc_results = data.frame(ids = 1:60)
 # nef_results = data.frame(ids = 1:60)
-informs = read.table(paste('~/CHTC_Downloads/FDA_cv/orig_informer_', as.character(nA), '.txt',sep=''), header = F)
-roc_results = read.table('orig_roc_results.txt', sep = ' ', header=T)
-nef_results = read.table('orig_nef_results.txt', sep = ' ', header=T)
+informs = read.table(paste('~/CHTC_Downloads/FDA_cv/orig_new_informer_', as.character(nA), '.txt',sep=''), header = F)
+roc_results = read.table('./results/orig_new_roc_results.txt', sep = ' ', header=T)
+nef_results = read.table('./results/orig_new_nef_results.txt', sep = ' ', header=T)
 chem_roc_results = read.table('./results/chem_roc_results.txt', sep = ' ', header=T)
 chem_nef_results = read.table('./results/chem_nef_results.txt', sep = ' ', header=T)
-
+baseline_roc = read.table('./results/orig_roc_results.txt', sep = ' ', header=T)
+baseline_nef = read.table('./results/orig_nef_results.txt', sep = ' ', header=T)
 
 k=nA
 sample_size = 100
@@ -35,6 +36,7 @@ roc_name = paste('roc_', as.character(k), sep = '')
 nef_name = paste('nef_', as.character(k), sep = '')
 roc_results[, roc_name] = rep(NA, 60)
 nef_results[, nef_name] = rep(NA, 60)
+pr_results = rep(NA,60)
 
 for (id in 1:60) {
   print(id)
@@ -47,10 +49,17 @@ for (id in 1:60) {
   roc_results[id, roc_name] = rocauc
   nef10 = Evaluate(cl_sample, inform, 'nef', 0.1, test, train, nT,sample_size,a,b,m0)
   nef_results[id, nef_name] = nef10
+  # pr_results[id] = Evaluate(cl_sample, inform, 'prauc', 0.1, test, train, nT,sample_size,a,b,m0)
 }
+rocauc
+nef10
+roc_results$roc_9[id]
+nef_results$nef_9[id]
+baseline_roc$roc_10[id]
+baseline_nef$nef_10[id]
 
-write.table(roc_results, file = 'orig_roc_results.txt',row.names = F)
-write.table(nef_results, file = 'orig_nef_results.txt',row.names = F)
+write.table(roc_results, file = './results/orig_new_roc_results.txt',row.names = F)
+write.table(nef_results, file = './results/orig_new_nef_results.txt',row.names = F)
 
 ### informers overlapping
 nA = 20
@@ -147,18 +156,18 @@ write.table(baseline_roc, file = 'bfw_roc_results.txt',row.names = F)
 write.table(baseline_nef, file = 'bfw_nef_results.txt',row.names = F)
 
 # for random informer set
-baseline_roc = roc_results
-baseline_nef = nef_results
+baseline_roc = read.table('./results/rdinfo_roc_results.txt', header = T)
+baseline_nef = read.table('./results/rdinfo_nef_results.txt', header = T)
 iter = 25
 sample_size = 100
-for (id in 31:60) {
+for (id in 1:60) {
   print(id)
   load(paste('~/CHTC_Downloads/FDA_cv/orig_clust_res_', as.character(id), '.RData',sep=''))
   ncpd = ncol(train)
   a = rep(mean(train, na.rm = T), ncol(train))
   b = 1 - a
   nT = as.integer(ncol(train) * 0.1)
-  for (nA in 1:20) {
+  for (nA in (11:20)*10) {
     roc_name = paste('roc_', as.character(nA), sep = '')
     nef_name = paste('nef_', as.character(nA), sep = '')
     roc = 0
@@ -174,31 +183,32 @@ for (id in 31:60) {
     baseline_nef[id, nef_name] = nef
   }
 }
-write.table(baseline_roc, file = 'rdinfo_roc_results_1.txt',row.names = F)
-write.table(baseline_nef, file = 'rdinfo_nef_results_1.txt',row.names = F)
+write.table(baseline_roc, file = './results/rdinfo_roc_results.txt',row.names = F)
+write.table(baseline_nef, file = './results/rdinfo_nef_results.txt',row.names = F)
 
 
 ### Plots
 library(ggplot2)
-results = data.frame('Informer_size' = 1:20)
+results = data.frame('Informer_size' = (1:20)*10)
+cols = c(11, 21:39)
 roc_results = read.table('./results/orig_roc_results.txt', sep = ' ', header=T)[-58,]
 results[1:20,'Boise_orig'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[2:21]
 roc_results = read.table('fast_roc_results.txt', sep = ' ', header=T)[-58,]
-results[,'fast_entropy'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[2:21]
+results[,'fast_entropy'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[cols]
 roc_results = read.table('fast_info_1_roc_results.txt', sep = ' ', header=T)[-58,]
-results[,'fast_pel1'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[2:21]
-# roc_results = read.table('./results/rdinfo_roc_results.txt', sep = ' ', header=T)[-58,]
-# results[,'Boise_rand'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[2:21]
+results[,'fast_pel1'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[cols]
+roc_results = read.table('./results/rdinfo_roc_results.txt', sep = ' ', header=T)[-58,]
+results[,'Boise_rand'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[cols]
 # results[, 'Baseline'] = rep(mean(baseline_roc, na.rm=T), 20)
 
 nef_results = read.table('./results/orig_nef_results.txt', sep = ' ', header=T)[-58,]
 results[1:20,'Boise_orig'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[2:21]
 nef_results = read.table('fast_nef_results.txt', sep = ' ', header=T)[-58,]
-results[,'fast_entropy'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[2:21]
+results[,'fast_entropy'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[cols]
 nef_results = read.table('fast_info_1_nef_results.txt', sep = ' ', header=T)[-58,]
-results[,'fast_pel1'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[2:21]
-# nef_results = read.table('./results/rdinfo_nef_results.txt', sep = ' ', header=T)[-58,]
-# results[,'Boise_rand'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[2:21]
+results[,'fast_pel1'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[cols]
+nef_results = read.table('./results/rdinfo_nef_results.txt', sep = ' ', header=T)[-58,]
+results[,'Boise_rand'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[cols]
 # results[, 'Baseline'] = rep(mean(baseline_nef, na.rm=T), 20)
 
 revnef_results = read.table('./Res/block_revnef_results.txt', sep = ' ', header=T)
@@ -241,15 +251,15 @@ p1 <- ggplot(results)+
   geom_line(mapping = aes(x = Informer_size, y = fast_pel1, color = 'fast_pel1'))+
   geom_point(mapping = aes(x = Informer_size, y = fast_entropy))+
   geom_line(mapping = aes(x = Informer_size, y = fast_entropy, color = 'fast_entropy'))+
-  geom_point(mapping = aes(x = Informer_size, y = Boise_orig))+
-  geom_line(mapping = aes(x = Informer_size, y = Boise_orig, color = 'orig_Boise'))+
-  scale_color_manual(name = "Methods", values = c("orig_Boise" = "green",
-                                                  'fast_entropy' = 'purple',
-                                                  'fast_pel1' = 'darksalmon',
-                                                  "Baseline" = "red"))+
-  scale_x_continuous('Informer sizes', breaks = seq(1,20, by=1))+
-  scale_y_continuous('ROCAUC mean', limits = c(0.789, 0.85))+
-  #scale_y_continuous('NEF mean', limits = c(0.676, 0.789))+
+  geom_point(mapping = aes(x = Informer_size, y = Boise_rand))+
+  geom_line(mapping = aes(x = Informer_size, y = Boise_rand, color = 'rand_Boise'))+
+  scale_color_manual(name = "Methods", values = c("rand_Boise" = "red",
+                                                  'fast_entropy' = 'darkblue',
+                                                  'fast_pel1' = 'purple'))+
+  scale_x_continuous('Informer sizes', breaks = seq(10,200, by=10))+
+  scale_y_continuous('ROCAUC mean', limits = c(0.806, 0.950))+
+  #scale_y_continuous('NEF mean', limits = c(0.692, 0.918))+
+  labs(title = "Clustering on whole matrix")+
   theme(axis.title = element_text(size = axis_title_size),
         axis.text = element_text(size = axis_text_size),
         legend.title = element_text(size = legend_title_size),

@@ -191,7 +191,8 @@ inform = inform_scores$V2[order(inform_scores$V3)[1:1000]]
 #fast_entropy_result = data.frame('ids' = 1:102, 'roc' = rep(NA, 102), 'nef10' = rep(NA, 102))
 fast_entropy_result = read.table('~/RAwork/BOISE/BOISE_followup/PCBA_CV/fast_entropy_results.txt', 
                               header = T)
-for (id in idxs[27:30]) {
+nA = 200
+for (id in idxs[1:15]) {
   load(paste('~/CHTC_Downloads/PCBA/pcba_orig_clust_res_', as.character(id), '.RData',sep=''))
   if(sum(test) == 0)
     next
@@ -215,7 +216,7 @@ for (id in idxs[27:30]) {
       inform_scores[j] = inform_scores[j] + mutual_info
     }
   }
-  inform = order(inform_scores, decreasing = T)[1:1000]
+  inform = order(inform_scores, decreasing = T)[1:nA]
   a = rep(mean(train, na.rm = T), ncol(train))
   b = 1 - a
   roc = Evaluate(cl_sample, inform, 'rocauc', 0.1, test, train, nT,sample_size,a,b,m0)
@@ -225,7 +226,8 @@ for (id in idxs[27:30]) {
   fast_entropy_result$roc[id] = roc
   fast_entropy_result$nef10[id] = nef10
 }
-write.table(fast_entropy_result, file = '~/RAwork/BOISE/BOISE_followup/PCBA_CV/fast_entropy_results.txt',row.names = F)
+write.table(fast_roc_results, file = '~/RAwork/BOISE/BOISE_followup/PCBA_CV/fast_entropy_roc_results.txt',row.names = F)
+write.table(fast_nef_results, file = '~/RAwork/BOISE/BOISE_followup/PCBA_CV/fast_entropy_nef_results.txt',row.names = F)
 
 # pel1
 fast_pel1_result = read.table('~/RAwork/BOISE/BOISE_followup/PCBA_CV/fast_pel1_results.txt', 
@@ -239,8 +241,8 @@ fast_pel1_result$nef10[id] = nef10
 write.table(fast_pel1_result, file = '~/RAwork/BOISE/BOISE_followup/PCBA_CV/fast_pel1_results.txt',row.names = F)
 
 ## random selection
-rand_result = data.frame('ids' = 1:102, 'roc' = rep(NA, 102), 'nef10' = rep(NA, 102))
-for (id in idxs[1:30]) {
+rand_result = read.table('~/RAwork/BOISE/BOISE_followup/PCBA_CV/rand_results.txt', header = T)
+for (id in idxs[1:15]) {
   load(paste('~/CHTC_Downloads/PCBA/pcba_orig_clust_res_', as.character(id), '.RData',sep=''))
   if(sum(test) == 0)
     next
@@ -249,7 +251,7 @@ for (id in idxs[1:30]) {
   roc = 0
   nef10 = 0
   for(iter in 1:25){
-    inform = sample(1:ncol(train), 1000)
+    inform = sample(1:ncol(train), nA)
     roc = roc + Evaluate(cl_sample, inform, 'rocauc', 0.1, test, train, nT,sample_size,a,b,m0)
     nef10 = nef10 + Evaluate(cl_sample, inform, 'nef', 0.1, test, train, nT,sample_size,a,b,m0)
   }
@@ -260,7 +262,9 @@ for (id in idxs[1:30]) {
   rand_result$roc[id] = roc
   rand_result$nef10[id] = nef10
 }
-write.table(rand_result, file = '~/RAwork/BOISE/BOISE_followup/PCBA_CV/rand_results.txt',row.names = F)
+write.table(rand_roc_results, file = '~/RAwork/BOISE/BOISE_followup/PCBA_CV/rand_roc_results.txt',row.names = F)
+write.table(rand_nef_results, file = '~/RAwork/BOISE/BOISE_followup/PCBA_CV/rand_nef_results.txt',row.names = F)
+
 
 ### Plots
 library(ggplot2)
@@ -270,59 +274,52 @@ aids = sapply(aids, function(x){
   tmp = unlist(strsplit(x, 'd'))
   return(tmp[2])
 })
-results = data.frame('AID' = aids)
-fast_entropy_results = read.table('./fast_entropy_results.txt', sep = ' ', header=T)
-results[,'roc_fast_entropy'] = fast_entropy_results$roc[idxs]
-results[,'nef_fast_entropy'] = fast_entropy_results$nef10[idxs]
-fast_pel1_results = read.table('./fast_pel1_results.txt', sep = ' ', header=T)
-results[,'roc_fast_pel1'] = fast_pel1_results$roc[idxs]
-results[,'nef_fast_pel1'] = fast_pel1_results$nef10[idxs]
-rand_results = read.table('./rand_results.txt', sep = ' ', header=T)
-results[,'roc_rand'] = rand_results$roc[idxs]
-results[,'nef_rand'] = rand_results$nef10[idxs]
-print(summary(results))
+fast_entropy_results = read.table('./fast_entropy_nef_results.txt', sep = ' ', header=T)
+rand_results = read.table('./rand_nef_results.txt', sep = ' ', header=T)
 
 legend_title_size = 10
 legend_text_size = 10
 axis_title_size = 14
 axis_text_size = 13
-p1 <- ggplot(results)+
-  geom_point(mapping = aes(x = AID, y = roc_fast_entropy))+
-  geom_line(mapping = aes(x = AID, y = roc_fast_entropy, color = 'fast_entropy', group = 1), linetype ='dashed')+
-  geom_point(mapping = aes(x = AID, y = roc_fast_pel1))+
-  geom_line(mapping = aes(x = AID, y = roc_fast_pel1, color = 'fast_pel1', group = 1), linetype ='dashed')+
-  geom_point(mapping = aes(x = AID, y = roc_rand))+
-  geom_line(mapping = aes(x = AID, y = roc_rand, color = 'rand_Boise', group = 1), linetype ='dashed')+
-  scale_color_manual(name = "Methods", values = c('fast_entropy' = 'darkblue',
-                                                  'fast_pel1' = 'green4',
-                                                  'rand_Boise' = 'red'))+
-  xlab("PCBA aids")+
-  ylab("ROCAUC")+
-  theme(axis.title = element_text(size = axis_title_size),
-        axis.text = element_text(size = axis_text_size),
-        legend.title = element_text(size = legend_title_size),
-        legend.text = element_text(size = legend_text_size),
-        legend.position = c(0.2,0.2))
-p2 <- ggplot(results)+
-  geom_point(mapping = aes(x = AID, y = nef_fast_entropy))+
-  geom_line(mapping = aes(x = AID, y = nef_fast_entropy, color = 'fast_entropy', group = 1), linetype ='dashed')+
-  geom_point(mapping = aes(x = AID, y = nef_fast_pel1))+
-  geom_line(mapping = aes(x = AID, y = nef_fast_pel1, color = 'fast_pel1', group = 1), linetype ='dashed')+
-  geom_point(mapping = aes(x = AID, y = nef_rand))+
-  geom_line(mapping = aes(x = AID, y = nef_rand, color = 'rand_Boise', group = 1), linetype ='dashed')+
-  scale_color_manual(name = "Methods", values = c('fast_entropy' = 'darkblue',
-                                                  'fast_pel1' = 'green4',
-                                                  'rand_Boise' = 'red'))+
-  xlab("PCBA aids")+
-  ylab("NEF10")+
-  theme(axis.title = element_text(size = axis_title_size),
-        axis.text = element_text(size = axis_text_size),
-        legend.title = element_text(size = legend_title_size),
-        legend.text = element_text(size = legend_text_size),
-        legend.position = c(0.2,0.2))
-myGrobs <- list(p1,p2)
-gridExtra::grid.arrange(grobs = myGrobs, nrow = 2,ncol = 1)
+p1 <- ggplot()+
+  geom_point(aes(x = rand_results$nef_50[idxs], y = fast_entropy_results$nef_50[idxs]))+
+  geom_abline(slope = 1, intercept = 0, color = 'red')+
+  labs(title = 'Scatterplot of NEF10 for nA=50', x = 'random Boise', y = 'fast Boise')
+p2 <- ggplot()+
+  geom_point(aes(x = rand_results$nef_100[idxs], y = fast_entropy_results$nef_100[idxs]))+
+  geom_abline(slope = 1, intercept = 0, color = 'red')+
+  labs(title = 'Scatterplot of NEF10 for nA=100', x = 'random Boise', y = 'fast Boise')
+p3 <- ggplot()+
+  geom_point(aes(x = rand_results$nef_200[idxs], y = fast_entropy_results$nef_200[idxs]))+
+  geom_abline(slope = 1, intercept = 0, color = 'red')+
+  labs(title = 'Scatterplot of NEF10 for nA=200', x = 'random Boise', y = 'fast Boise')
+p4 <- ggplot()+
+  geom_point(aes(x = rand_results$nef_1000[idxs], y = fast_entropy_results$nef_1000[idxs]))+
+  geom_abline(slope = 1, intercept = 0, color = 'red')+
+  labs(title = 'Scatterplot of NEF10 for nA=1000', x = 'random Boise', y = 'fast Boise')
+myGrobs <- list(p1,p2, p3,p4)
+gridExtra::grid.arrange(grobs = myGrobs, nrow = 2,ncol = 2)
 
+fast_entropy_results = read.table('./fast_entropy_roc_results.txt', sep = ' ', header=T)
+rand_results = read.table('./rand_roc_results.txt', sep = ' ', header=T)
+p1 <- ggplot()+
+  geom_point(aes(x = rand_results$roc_50[idxs], y = fast_entropy_results$roc_50[idxs]))+
+  geom_abline(slope = 1, intercept = 0, color = 'red')+
+  labs(title = 'Scatterplot of ROCAUC for nA=50', x = 'random Boise', y = 'fast Boise')
+p2 <- ggplot()+
+  geom_point(aes(x = rand_results$roc_100[idxs], y = fast_entropy_results$roc_100[idxs]))+
+  geom_abline(slope = 1, intercept = 0, color = 'red')+
+  labs(title = 'Scatterplot of ROCAUC for nA=100', x = 'random Boise', y = 'fast Boise')
+p3 <- ggplot()+
+  geom_point(aes(x = rand_results$roc_200[idxs], y = fast_entropy_results$roc_200[idxs]))+
+  geom_abline(slope = 1, intercept = 0, color = 'red')+
+  labs(title = 'Scatterplot of ROCAUC for nA=200', x = 'random Boise', y = 'fast Boise')
+p4 <- ggplot()+
+  geom_point(aes(x = rand_results$roc_1000[idxs], y = fast_entropy_results$roc_1000[idxs]))+
+  geom_abline(slope = 1, intercept = 0, color = 'red')+
+  labs(title = 'Scatterplot of ROCAUC for nA=1000', x = 'random Boise', y = 'fast Boise')
+myGrobs <- list(p1,p2, p3,p4)
+gridExtra::grid.arrange(grobs = myGrobs, nrow = 2,ncol = 2)
 
 a = rep(mean(train, na.rm = T), ncol(train))
 b = 1 - a

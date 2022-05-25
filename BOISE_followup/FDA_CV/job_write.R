@@ -87,12 +87,12 @@ write.table(A,file = '~/Upload/Boise_followup/job_list.txt',col.names = F,row.na
 
 ### for informer search
 test_ids = read.table('Test_IDS.txt')
-informs = read.table('~/CHTC_Downloads/FDA_cv/Informer_29.txt')
+informs = read.table('~/CHTC_Downloads/FDA_cv/orig_new_informer_11.txt')
 load('fda_data.RData')
 candidates = c()
 ids = c()
 count = 0
-for (id in 41:60) {
+for  (id in 21:40) {
   test_id = test_ids[id,1]
   test = dat[rownames(dat)==test_id,]
   complete_idx = which(!is.na(test))

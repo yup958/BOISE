@@ -9,6 +9,8 @@ orig_scores = read.table('~/CHTC_Downloads/FDA_cv/orig_scores.txt', header = F)
 colnames(chem_scores) = c('testid', 'chemid', 'score')
 colnames(orig_scores) = c('testid', 'chemid', 'score')
 ## for original CRP clustering
+baseline_roc = read.table('fast_info_1_roc_results.txt', header = T)
+baseline_nef = read.table('fast_info_1_nef_results.txt', header = T)
 for (id in 1:60) {
   load(paste('~/CHTC_Downloads/FDA_cv/orig_clust_res_', as.character(id), '.RData',sep=''))
   # inform_scores = rep(0, ncol(train))
@@ -33,8 +35,9 @@ for (id in 1:60) {
   # }
   inform_scores = orig_scores[which(orig_scores$testid == id),'score']
   nT = as.integer(ncol(train) * 0.1)
-  for (nA in 1:20) {
-    #inform = order(inform_scores, decreasing = T)[1:nA]
+  nAs = (11:20) * 10
+  for (nA in nAs) {
+    # inform = order(inform_scores, decreasing = T)[1:nA]
     inform = order(inform_scores)[1:nA]
     roc_name = paste('roc_', as.character(nA), sep = '')
     nef_name = paste('nef_', as.character(nA), sep = '')
@@ -45,16 +48,17 @@ for (id in 1:60) {
   }
 }
 write.table(baseline_roc, file = 'fast_info_1_roc_results.txt',row.names = F)
-write.table(baseline_nef, file = 'fast_nef_results.txt',row.names = F)
+write.table(baseline_nef, file = 'fast_info_1_nef_results.txt',row.names = F)
 
 ## for block clustering
-max_block_size = 5
+baseline_roc = read.table('./results/chem_fast_info_1_roc_results.txt', header = T)
+baseline_nef = read.table('./results/chem_fast_info_1_nef_results.txt', header = T)
 for (id in 1:60) {
   load(paste('~/CHTC_Downloads/FDA_cv/testid_', as.character(id), '_block.RData',sep=''))
   # inform_scores = rep(0, ncol(train))
   # for (cpd in 1:ncol(train)) {
   #   grp = cl$C[cpd]
-  #   sub_cols = which(cl$C == grp) 
+  #   sub_cols = which(cl$C == grp)
   #   sub_train = train[ , sub_cols]
   #   for (i in 1:sample_size) {
   #     x = train[, cpd]
@@ -77,22 +81,10 @@ for (id in 1:60) {
   inform_scores = chem_scores[which(chem_scores$testid == id),'score']
   # Evaluate
   nT = as.integer(ncol(train) * 0.1)
-  inform = c()
-  sub_grps = c()
-  idx = 1
-  for (nA in 1:30) {
-    #inform = order(inform_scores, decreasing = T)[1:nA]
-    # inform = order(inform_scores)[1:nA]
-    tmp_inform = order(inform_scores)[idx]
-    tmp_grp = cl$C[tmp_inform]
-    while(length(which(sub_grps == tmp_grp)) >= max_block_size){
-      idx = idx + 1
-      tmp_inform = order(inform_scores)[idx]
-      tmp_grp = cl$C[tmp_inform]
-    }
-    idx = idx + 1
-    inform = c(inform, tmp_inform)
-    sub_grps = c(sub_grps, tmp_grp)
+  nAs = (11:20) * 10
+  for (nA in nAs) {
+    # inform = order(inform_scores, decreasing = T)[1:nA]
+    inform = order(inform_scores)[1:nA]
     roc_name = paste('roc_', as.character(nA), sep = '')
     nef_name = paste('nef_', as.character(nA), sep = '')
     Scores = evaluate_interm(cl, inform, train, test, m0s, block, sample_size)
@@ -117,4 +109,3 @@ for (id in 1:60) {
 }
 write.table(baseline_roc, file = './results/chem_fast_info_1_roc_results.txt',row.names = F)
 write.table(baseline_nef, file = './results/chem_fast_info_1_nef_results.txt',row.names = F)
-
