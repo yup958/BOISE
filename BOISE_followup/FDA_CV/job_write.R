@@ -4,12 +4,20 @@ load('fda_data.RData')
 total_k = 0
 grps = c()
 ids = c()
-for (id in 31:60) {
-  test_id = test_ids[id,1]
-  test = dat[rownames(dat)==test_id,]
-  complete_idx = which(!is.na(test))
-  train = dat[!row.names(dat)==test_id, complete_idx]
-  test = test[complete_idx]
+for (id in 1:4) {
+  # test_id = test_ids[id,1]
+  # test = dat[rownames(dat)==test_id,]
+  # complete_idx = which(!is.na(test))
+  # train = dat[!row.names(dat)==test_id, complete_idx]
+  # test = test[complete_idx]
+  complete_indicator = read.csv('all_FDA_assays_cln_smiles_pccids.csv', header = T)
+  rownames(complete_indicator) = complete_indicator$PUBCHEM_CID
+  complete_indicator = complete_indicator[5:ncol(complete_indicator)]
+  valid_cols = c(1, 5, 7, 17) 
+  valid_col = valid_cols[id]
+  complete_cpd = rownames(complete_indicator)[which(complete_indicator[,valid_col] == 1)]
+  complete_cpd = sapply(complete_cpd, function(x){return(paste('CID', as.character(x), sep = '_'))})
+  train = dat[, which(colnames(dat) %in% complete_cpd)]
   cids = colnames(train)
   cl = read.csv('chemical_clustering_res.csv', header = T)
   cl = cl[cl$cid %in% cids,]
@@ -37,13 +45,21 @@ A$m0 = rep(1:25, total_k)
 write.table(A,file = '~/Upload/Boise_followup/job_list.txt',col.names = F,row.names = F)
 
 ## rearrangement blocks
-m0_selections = read.table('~/CHTC_Downloads/FDA_cv/prior_mass_chem.txt', header = F)
-for (id in 31:60) {
-  test_id = test_ids[id,1]
-  test = dat[rownames(dat)==test_id,]
-  complete_idx = which(!is.na(test))
-  train = dat[!row.names(dat)==test_id, complete_idx]
-  test = test[complete_idx]
+m0_selections = read.table('~/CHTC_Downloads/FDA_prospective/chem_prior_mass.txt', header = F)
+for (id in 1:4) {
+  # test_id = test_ids[id,1]
+  # test = dat[rownames(dat)==test_id,]
+  # complete_idx = which(!is.na(test))
+  # train = dat[!row.names(dat)==test_id, complete_idx]
+  # test = test[complete_idx]
+  complete_indicator = read.csv('all_FDA_assays_cln_smiles_pccids.csv', header = T)
+  rownames(complete_indicator) = complete_indicator$PUBCHEM_CID
+  complete_indicator = complete_indicator[5:ncol(complete_indicator)]
+  valid_cols = c(1, 5, 7, 17) 
+  valid_col = valid_cols[id]
+  complete_cpd = rownames(complete_indicator)[which(complete_indicator[,valid_col] == 1)]
+  complete_cpd = sapply(complete_cpd, function(x){return(paste('CID', as.character(x), sep = '_'))})
+  train = dat[, which(colnames(dat) %in% complete_cpd)]
   cids = colnames(train)
   cl = read.csv('chemical_clustering_res.csv', header = T)
   cl = cl[cl$cid %in% cids,]
@@ -67,18 +83,18 @@ for (id in 31:60) {
   ## load blocks
   block = list()
   for (k in 1:K) {
-    load(paste('~/CHTC_Downloads/FDA_cv/testid_', as.character(id), '_block_',
+    load(paste('~/CHTC_Downloads/FDA_prospective/testid_', as.character(id), '_block_',
                as.character(k), '.RData', sep = ''))
     block[[k]] = cl_sample$CC
   }
-  save(list = c('block', 'cl', 'train', 'test', 'm0s', 'test_id'), file = paste('testid_', as.character(id),
+  save(list = c('block', 'cl', 'train', 'm0s', 'id'), file = paste('testid_', as.character(id),
                                                                          '_block.RData', sep=''))
 }
 
 ### for original boise m0 find
 ids = c()
 m0 = c()
-for (id in 31:60) {
+for (id in 1:4) {
   ids = c(ids, rep(id, 30))
   m0 = c(m0, 1:30)
 }
@@ -86,29 +102,34 @@ A = data.frame(id = ids, m0 = m0)
 write.table(A,file = '~/Upload/Boise_followup/job_list.txt',col.names = F,row.names = F)
 
 ### for informer search
-test_ids = read.table('Test_IDS.txt')
-informs = read.table('~/CHTC_Downloads/FDA_cv/orig_new_informer_11.txt')
+#test_ids = read.table('Test_IDS.txt')
+informs = read.table('~/CHTC_Downloads/FDA_prospective/pros_orig_L2_informer_19.txt')
 load('fda_data.RData')
 candidates = c()
 ids = c()
 count = 0
-for  (id in 21:40) {
-  test_id = test_ids[id,1]
-  test = dat[rownames(dat)==test_id,]
-  complete_idx = which(!is.na(test))
-  count = count + length(complete_idx)
-  train = dat[!row.names(dat)==test_id, complete_idx]
-  test = test[complete_idx]
-  cids = colnames(train)
+for  (id in 1:4) {
+  # test_id = test_ids[id,1]
+  # test = dat[rownames(dat)==test_id,]
+  # complete_idx = which(!is.na(test))
+  # count = count + length(complete_idx)
+  # train = dat[!row.names(dat)==test_id, complete_idx]
+  # test = test[complete_idx]
+  # cids = colnames(train)
+  # pre_inform = as.numeric(unlist(strsplit(as.character(informs$V2[id]), split = ' ')))
+  # #pre_inform=c()
+  
+  load(paste('~/CHTC_Downloads/FDA_prospective/pros_orig_clust_', as.character(id), '.RData', sep = ''))
+  #pre_inform = c()
   pre_inform = as.numeric(unlist(strsplit(as.character(informs$V2[id]), split = ' ')))
-  #pre_inform=c()
-  cand_num = ncol(train) 
+  cand_num = ncol(train)
+  count = count + cand_num
   ids = c(ids, rep(id,cand_num - length(pre_inform)))
   candidates= c(candidates, setdiff(1:cand_num, pre_inform))
 }
 A = data.frame(id = ids, candidate = candidates)
 write.table(A,file = '~/Upload/Boise_followup/job_list.txt',col.names = F,row.names = F)
-
+  
 ## rearrangement original clustering
 m0_selections = read.table('~/CHTC_Downloads/FDA_cv/prior_mass_orig.txt', header = F)
 for (id in 31:60) {

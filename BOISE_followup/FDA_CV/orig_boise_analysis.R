@@ -1,34 +1,34 @@
 setwd('~/RAwork/BOISE/BOISE_followup/FDA_CV/')
 set.seed(817)
 
-nA = 11
-informs = read.table(paste('~/CHTC_Downloads/FDA_cv/orig_new_informer_', as.character(nA), '.txt', sep=''), header = F)
+nA = 15
+informs = read.table(paste('~/CHTC_Downloads/FDA_cv/orig_L0_informer_', as.character(nA), '.txt', sep=''), header = F)
 chr_inform = unlist(lapply(informs$V2, function(x){return(paste(x, collapse = ','))}))
 informs$V2 = chr_inform
 informs$V3 = NULL
-write.table(informs, file = paste('~/CHTC_Downloads/FDA_cv/orig_new_informer_', as.character(nA), '.txt',sep=''),
+write.table(informs, file = paste('~/CHTC_Downloads/FDA_cv/orig_L0_informer_', as.character(nA), '.txt',sep=''),
             row.names = F, col.names = F)
 
-pre_informs = read.table(paste('~/CHTC_Downloads/FDA_cv/orig_new_informer_', as.character(nA-1),'.txt', sep=''), header = F)
-informs = read.table(paste('~/CHTC_Downloads/FDA_cv/orig_new_informer_', as.character(nA), '.txt',sep=''), header = F)
+pre_informs = read.table(paste('~/CHTC_Downloads/FDA_cv/orig_L0_informer_', as.character(nA-1),'.txt', sep=''), header = F)
+informs = read.table(paste('~/CHTC_Downloads/FDA_cv/orig_L0_informer_', as.character(nA), '.txt',sep=''), header = F)
 for (id in 1:60) {
   pre_inform = pre_informs$V2[id]
   A = informs$V2[id]
   inform = paste(pre_inform, A, collapse = ',')
   informs$V2[id] = inform
 }
-write.table(informs, file = paste('~/CHTC_Downloads/FDA_cv/orig_new_informer_', as.character(nA), '.txt',sep=''),
+write.table(informs, file = paste('~/CHTC_Downloads/FDA_cv/orig_L0_informer_', as.character(nA), '.txt',sep=''),
             row.names = F, col.names = F)
 
 # roc_results = data.frame(ids = 1:60)
 # nef_results = data.frame(ids = 1:60)
-informs = read.table(paste('~/CHTC_Downloads/FDA_cv/orig_new_informer_', as.character(nA), '.txt',sep=''), header = F)
-roc_results = read.table('./results/orig_new_roc_results.txt', sep = ' ', header=T)
-nef_results = read.table('./results/orig_new_nef_results.txt', sep = ' ', header=T)
+informs = read.table(paste('~/CHTC_Downloads/FDA_cv/orig_L0_informer_', as.character(nA), '.txt',sep=''), header = F)
+roc_results = read.table('./results/orig_L0_roc_results.txt', sep = ' ', header=T)
+nef_results = read.table('./results/orig_L0_nef_results.txt', sep = ' ', header=T)
 chem_roc_results = read.table('./results/chem_roc_results.txt', sep = ' ', header=T)
 chem_nef_results = read.table('./results/chem_nef_results.txt', sep = ' ', header=T)
-baseline_roc = read.table('./results/orig_roc_results.txt', sep = ' ', header=T)
-baseline_nef = read.table('./results/orig_nef_results.txt', sep = ' ', header=T)
+baseline_roc = read.table('./results/orig_L1_roc_results.txt', sep = ' ', header=T)
+baseline_nef = read.table('./results/orig_L1_nef_results.txt', sep = ' ', header=T)
 
 k=nA
 sample_size = 100
@@ -36,7 +36,7 @@ roc_name = paste('roc_', as.character(k), sep = '')
 nef_name = paste('nef_', as.character(k), sep = '')
 roc_results[, roc_name] = rep(NA, 60)
 nef_results[, nef_name] = rep(NA, 60)
-pr_results = rep(NA,60)
+#pr_results = rep(NA,60)
 
 for (id in 1:60) {
   print(id)
@@ -53,13 +53,86 @@ for (id in 1:60) {
 }
 rocauc
 nef10
-roc_results$roc_9[id]
-nef_results$nef_9[id]
-baseline_roc$roc_10[id]
-baseline_nef$nef_10[id]
+roc_results$roc_17[id]
+nef_results$nef_17[id]
+baseline_roc$roc_18[id]
+baseline_nef$nef_18[id]
 
-write.table(roc_results, file = './results/orig_new_roc_results.txt',row.names = F)
-write.table(nef_results, file = './results/orig_new_nef_results.txt',row.names = F)
+write.table(roc_results, file = './results/orig_L0_roc_results.txt',row.names = F)
+write.table(nef_results, file = './results/orig_L0_nef_results.txt',row.names = F)
+
+## other nef thresholds
+sample_size = 100
+# old_nef20_results = data.frame(ids = 1:60)
+# old_nef30_results = data.frame(ids = 1:60)
+# new_nef20_results = data.frame(ids = 1:60)
+# new_nef30_results = data.frame(ids = 1:60)
+load('./results/nef_2030_l012.RData')
+
+for (nA in 1:20) {
+  informs = read.table(paste('~/CHTC_Downloads/FDA_cv/orig_informer_', as.character(nA), '.txt',sep=''), header = F)
+  nef_name = paste('nef_', as.character(nA), sep = '')
+  old_nef20_results[, nef_name] = rep(NA, 60)
+  old_nef30_results[, nef_name] = rep(NA, 60)
+  for (id in 1:60) {
+    inform = as.numeric(unlist(strsplit(as.character(informs$V2[id]), split = ' ')))
+    load(paste('~/CHTC_Downloads/FDA_cv/orig_clust_res_', as.character(id), '.RData',sep=''))
+    a = rep(mean(train, na.rm = T), ncol(train))
+    b = 1 - a
+    nT = as.integer(ncol(train) * 0.2)
+    nef20 = Evaluate(cl_sample, inform, 'nef', 0.2, test, train, nT,sample_size,a,b,m0)
+    old_nef20_results[id, nef_name] = nef20
+    nT = as.integer(ncol(train) * 0.3)
+    nef30 = Evaluate(cl_sample, inform, 'nef', 0.3, test, train, nT,sample_size,a,b,m0)
+    old_nef30_results[id, nef_name] = nef30
+  }
+}
+
+informs = read.table(paste('~/CHTC_Downloads/FDA_cv/orig_new_informer_', as.character(19), '.txt',sep=''), header = F)
+for (nA in 19:19) {
+  print(nA)
+  nef_name = paste('nef_', as.character(nA), sep = '')
+  l2_nef20_results[, nef_name] = rep(NA, 60)
+  l2_nef30_results[, nef_name] = rep(NA, 60)
+  for (id in 1:60) {
+    inform = as.numeric(unlist(strsplit(as.character(informs$V2[id]), split = ' ')))
+    inform = inform[1:nA]
+    load(paste('~/CHTC_Downloads/FDA_cv/orig_clust_res_', as.character(id), '.RData',sep=''))
+    a = rep(mean(train, na.rm = T), ncol(train))
+    b = 1 - a
+    nT = as.integer(ncol(train) * 0.2)
+    nef20 = Evaluate(cl_sample, inform, 'nef', 0.2, test, train, nT,sample_size,a,b,m0)
+    l2_nef20_results[id, nef_name] = nef20
+    nT = as.integer(ncol(train) * 0.3)
+    nef30 = Evaluate(cl_sample, inform, 'nef', 0.3, test, train, nT,sample_size,a,b,m0)
+    l2_nef30_results[id, nef_name] = nef30
+  }
+}
+l0_nef20_results = data.frame(ids = 1:60)
+l0_nef30_results = data.frame(ids = 1:60)
+informs = read.table(paste('~/CHTC_Downloads/FDA_cv/orig_L0_informer_', as.character(14), '.txt',sep=''), header = F)
+for (nA in 15:15) {
+  print(nA)
+  nef_name = paste('nef_', as.character(nA), sep = '')
+  l0_nef20_results[, nef_name] = rep(NA, 60)
+  l0_nef30_results[, nef_name] = rep(NA, 60)
+  for (id in 1:60) {
+    inform = as.numeric(unlist(strsplit(as.character(informs$V2[id]), split = ' ')))
+    inform = inform[1:nA]
+    load(paste('~/CHTC_Downloads/FDA_cv/orig_clust_res_', as.character(id), '.RData',sep=''))
+    a = rep(mean(train, na.rm = T), ncol(train))
+    b = 1 - a
+    nT = as.integer(ncol(train) * 0.2)
+    nef20 = Evaluate(cl_sample, inform, 'nef', 0.2, test, train, nT,sample_size,a,b,m0)
+    l0_nef20_results[id, nef_name] = nef20
+    nT = as.integer(ncol(train) * 0.3)
+    nef30 = Evaluate(cl_sample, inform, 'nef', 0.3, test, train, nT,sample_size,a,b,m0)
+    l0_nef30_results[id, nef_name] = nef30
+  }
+}
+save(list = c('l0_nef20_results','l0_nef30_results','l1_nef20_results',
+              'l1_nef30_results','l2_nef20_results','l2_nef30_results'), 
+     file = './results/nef_2030_l012.RData')
 
 ### informers overlapping
 nA = 20
@@ -189,60 +262,75 @@ write.table(baseline_nef, file = './results/rdinfo_nef_results.txt',row.names = 
 
 ### Plots
 library(ggplot2)
-results = data.frame('Informer_size' = (1:20)*10)
+results = data.frame('Informer_size' = (1:15))
 cols = c(11, 21:39)
-roc_results = read.table('./results/orig_roc_results.txt', sep = ' ', header=T)[-58,]
-results[1:20,'Boise_orig'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[2:21]
-roc_results = read.table('fast_roc_results.txt', sep = ' ', header=T)[-58,]
-results[,'fast_entropy'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[cols]
-roc_results = read.table('fast_info_1_roc_results.txt', sep = ' ', header=T)[-58,]
-results[,'fast_pel1'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[cols]
-roc_results = read.table('./results/rdinfo_roc_results.txt', sep = ' ', header=T)[-58,]
+roc_results = read.table('./results/orig_L1_roc_results.txt', sep = ' ', header=T)
+results[1:15,'Boise_L1'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[2:16]
+roc_results = read.table('fast_roc_results.txt', sep = ' ', header=T)
+results[,'Boise_fast'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[cols]
+# roc_results = read.table('fast_info_1_roc_results.txt', sep = ' ', header=T)[-58,]
+# results[,'fast_pel1'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[cols]
+roc_results = read.table('./results/rdinfo_roc_results.txt', sep = ' ', header=T)
 results[,'Boise_rand'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[cols]
-# results[, 'Baseline'] = rep(mean(baseline_roc, na.rm=T), 20)
+roc_results = read.table('./results/orig_L2_roc_results.txt', sep = ' ', header = T)
+results[1:15, 'Boise_L2'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[2:16]
+roc_results = read.table('./results/orig_L0_roc_results.txt', sep = ' ', header = T)
+results[1:15, 'Boise_L0'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[2:16]
+results[, 'Baseline'] = rep(mean(baseline_roc, na.rm=T), 15)
 
-nef_results = read.table('./results/orig_nef_results.txt', sep = ' ', header=T)[-58,]
-results[1:20,'Boise_orig'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[2:21]
-nef_results = read.table('fast_nef_results.txt', sep = ' ', header=T)[-58,]
-results[,'fast_entropy'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[cols]
-nef_results = read.table('fast_info_1_nef_results.txt', sep = ' ', header=T)[-58,]
-results[,'fast_pel1'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[cols]
-nef_results = read.table('./results/rdinfo_nef_results.txt', sep = ' ', header=T)[-58,]
+nef_results = read.table('./results/orig_L1_nef_results.txt', sep = ' ', header=T)
+results[1:15,'Boise_L1'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[2:16]
+nef_results = read.table('fast_nef_results.txt', sep = ' ', header=T)
+results[,'Boise_fast'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[cols]
+# nef_results = read.table('fast_info_1_nef_results.txt', sep = ' ', header=T)[-58,]
+# results[,'fast_pel1'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[cols]
+nef_results = read.table('./results/rdinfo_nef_results.txt', sep = ' ', header=T)
 results[,'Boise_rand'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[cols]
-# results[, 'Baseline'] = rep(mean(baseline_nef, na.rm=T), 20)
+nef_results = read.table('./results/orig_L2_nef_results.txt', sep = ' ', header=T)
+results[1:15,'Boise_L2'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[2:16]
+nef_results = read.table('./results/orig_L0_nef_results.txt', sep = ' ', header=T)
+results[1:15,'Boise_L0'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[2:16]
+results[, 'Baseline'] = rep(mean(baseline_nef, na.rm=T), 15)
 
 revnef_results = read.table('./Res/block_revnef_results.txt', sep = ' ', header=T)
 results[,'Boise_block'] = apply(revnef_results, 2,function(x){return(mean(x, na.rm = T))})[2:14]
 revnef_results = read.table('./Res/revnef_results.txt', sep = ' ', header=T)
 results[,'Boise_original'] = apply(revnef_results, 2,function(x){return(mean(x, na.rm = T))})[4:16]
 
-legend_title_size = 10
-legend_text_size = 10
+legend_title_size = 13
+legend_text_size = 13
 axis_title_size = 14
 axis_text_size = 13
-p2 <- ggplot(results)+
-  geom_point(mapping = aes(x = Informer_size, y = Boise_fast))+
-  geom_line(mapping = aes(x = Informer_size, y = Boise_fast, color = 'fast_Boise'))+
-  geom_point(mapping = aes(x = Informer_size, y = Boise_rand))+
-  geom_line(mapping = aes(x = Informer_size, y = Boise_rand, color = 'rand_Boise'))+
+p1 <- ggplot(results)+
+  # geom_point(mapping = aes(x = Informer_size, y = Boise_fast))+
+  # geom_line(mapping = aes(x = Informer_size, y = Boise_fast, color = 'fast_Boise'))+
+  # geom_point(mapping = aes(x = Informer_size, y = Boise_rand))+
+  # geom_line(mapping = aes(x = Informer_size, y = Boise_rand, color = 'rand_Boise'))+
   geom_line(mapping = aes(x = Informer_size, y = Baseline, color = 'Baseline'))+
-  geom_point(mapping = aes(x = Informer_size, y = Boise_orig))+
-  geom_line(mapping = aes(x = Informer_size, y = Boise_orig, color = 'orig_Boise'))+
-  scale_color_manual(name = "Methods", values = c("block_Boise" = "darkblue",
-                                                  'fast_Boise' = 'purple',
+  geom_point(mapping = aes(x = Informer_size, y = Boise_L0))+
+  geom_line(mapping = aes(x = Informer_size, y = Boise_L0, color = 'Boise_L0'))+
+  geom_point(mapping = aes(x = Informer_size, y = Boise_L1))+
+  geom_line(mapping = aes(x = Informer_size, y = Boise_L1, color = 'Boise_L1'))+
+  geom_point(mapping = aes(x = Informer_size, y = Boise_L2))+
+  geom_line(mapping = aes(x = Informer_size, y = Boise_L2, color = 'Boise_L2'))+
+  scale_color_manual(name = "Methods", values = c('fast_Boise' = 'purple',
                                                   'rand_Boise' = 'orange',
-                                                  'orig_Boise' = 'green',
+                                                  'Boise_L0' = 'darksalmon',
+                                                  'Boise_L1' = 'green',
+                                                  'Boise_L2' = 'blue',
                                                   "Baseline" = "red"))+
-  scale_x_continuous('Informer sizes', breaks = seq(1,26, by=1))+
-  #scale_y_continuous('ROCAUC mean', limits = c(0.789, 0.85))+
-  scale_y_continuous('NEF mean', limits = c(0.676, 0.789))+
+  scale_x_continuous('Informer sizes', breaks = seq(1,20, by=1))+
+  scale_y_continuous('ROCAUC mean', limits = c(0.789, 0.845))+
+  #scale_y_continuous('NEF10 mean', limits = c(0.678, 0.78))+
   #scale_y_continuous('revNEF mean', limits = c(0.66, 0.73))+
   theme(axis.title = element_text(size = axis_title_size),
         axis.text = element_text(size = axis_text_size),
         legend.title = element_text(size = legend_title_size),
         legend.text = element_text(size = legend_text_size),
         #legend.position = c(0.85,0.25),
-        legend.position = 'none')
+        legend.position = c(0.85,0.3))
+myGrobs <- list(p1,p2)
+gridExtra::grid.arrange(grobs = myGrobs, nrow = 2,ncol = 1)
 myGrobs <- list(p1,p3,p2,p4)
 gridExtra::grid.arrange(grobs = myGrobs, nrow = 2,ncol = 2)
 
@@ -266,6 +354,46 @@ p1 <- ggplot(results)+
         legend.text = element_text(size = legend_text_size),
         #legend.position = c(0.85,0.25),
         legend.position = c(0.85, 0.25))
+
+## plot of different nef thresholds
+results = data.frame('Informer_size' = (1:15))
+nef_results = read.table('./results/orig_L0_nef_results.txt', sep = ' ', header=T)
+results[1:15,'Boise_L0'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[2:16]
+nef_results = read.table('./results/orig_L1_nef_results.txt', sep = ' ', header=T)
+results[1:15,'Boise_L1'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[2:16]
+nef_results = read.table('./results/orig_L2_nef_results.txt', sep = ' ', header=T)
+results[1:15,'Boise_L2'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[2:16]
+
+results[1:15,'Boise_L0'] = apply(l0_nef20_results, 2,function(x){return(mean(x, na.rm = T))})[2:16]
+results[1:15,'Boise_L1'] = apply(l1_nef20_results, 2,function(x){return(mean(x, na.rm = T))})[2:16]
+results[1:15,'Boise_L2'] = apply(l2_nef20_results, 2,function(x){return(mean(x, na.rm = T))})[2:16]
+
+results[1:15,'Boise_L0'] = apply(l0_nef30_results, 2,function(x){return(mean(x, na.rm = T))})[2:16]
+results[1:15,'Boise_L1'] = apply(l1_nef30_results, 2,function(x){return(mean(x, na.rm = T))})[2:16]
+results[1:15,'Boise_L2'] = apply(l2_nef30_results, 2,function(x){return(mean(x, na.rm = T))})[2:16]
+
+p1 <- ggplot(results)+
+  geom_point(mapping = aes(x = Informer_size, y = Boise_L0))+
+  geom_line(mapping = aes(x = Informer_size, y = Boise_L0, color = 'Boise_L0'))+
+  geom_point(mapping = aes(x = Informer_size, y = Boise_L1))+
+  geom_line(mapping = aes(x = Informer_size, y = Boise_L1, color = 'Boise_L1'))+
+  geom_point(mapping = aes(x = Informer_size, y = Boise_L2))+
+  geom_line(mapping = aes(x = Informer_size, y = Boise_L2, color = 'Boise_L2'))+
+  scale_color_manual(name = "Methods", values = c('Boise_L0' = 'darksalmon',
+                                                  'Boise_L1' = 'green',
+                                                  'Boise_L2' = 'blue',
+                                                  "Baseline" = "red"))+
+  scale_x_continuous('Informer sizes', breaks = seq(1,20, by=1))+
+  ylab('NEF10 mean')+
+  #scale_y_continuous('NEF mean', limits = c(0.673, 0.789))+
+  theme(axis.title = element_text(size = axis_title_size),
+        axis.text = element_text(size = axis_text_size),
+        legend.title = element_text(size = legend_title_size),
+        legend.text = element_text(size = legend_text_size),
+        legend.position = c(0.8,0.3))
+myGrobs <- list(p1,p2,p3)
+gridExtra::grid.arrange(grobs = myGrobs, nrow = 3,ncol = 1)
+
 
 ### informer set analysis
 id=1

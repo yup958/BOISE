@@ -75,8 +75,9 @@ for (i in 1:l) {
   post_probs = exp(log_post_probs) / (sum(exp(log_post_probs)))
   Score = post_probs %*% post_thetas
   #pel2s[i] = sum(sort(1-Score)[1:nT])
-  Score = matrix(Score, ncol=1)
-  pel2s[i] = -sum(abs(Score %*% t(unit_vec) - unit_vec %*% t(Score)))
+  Score = sort(Score, decreasing = T)
+  weights = (1:n) - 1
+  pel2s[i] = sum(Score * weights)
 }
 ## calculate PEL1
 lg_wts = lg_wts - max(lg_wts)
