@@ -134,54 +134,54 @@ baseline_nef = baseline_nef[-58]
 
 ### Plots
 library(ggplot2)
-results = data.frame('Informer_size' = (1:20)*10)
+results = data.frame('Informer_size' = (1:30))
 cols = c(11, 21, 31:48)
 roc_results = read.table('./results/chem_roc_results.txt', sep = ' ', header=T)
 results[,'Boise_block'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[2:31]
 roc_results = read.table('./results/chem_fast_roc_results.txt', sep = ' ', header=T)
-results[,'Boise_fast'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[cols]
+results[,'Boise_fast'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[2:31]
 roc_results = read.table('./results/chem_fast_info_1_roc_results.txt', sep = ' ', header=T)
 results[,'fast_pel1'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[cols]
 roc_results = read.table('./results/chem_rdinfo_roc_results.txt', sep = ' ', header=T)
-results[,'Boise_rand'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[cols]
-# results[, 'Baseline'] = rep(mean(baseline_roc, na.rm=T), 30)
+results[,'Boise_rand'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[2:31]
+results[, 'Baseline'] = rep(mean(baseline_roc, na.rm=T), 30)
 
 nef_results = read.table('./results/chem_nef_results.txt', sep = ' ', header=T)
 results[,'Boise_block'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[2:31]
 nef_results = read.table('./results/chem_fast_nef_results.txt', sep = ' ', header=T)
-results[,'Boise_fast'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[cols]
+results[,'Boise_fast'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[2:31]
 nef_results = read.table('./results/chem_fast_info_1_nef_results.txt', sep = ' ', header=T)
 results[,'fast_pel1'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[cols]
 nef_results = read.table('./results/chem_rdinfo_nef_results.txt', sep = ' ', header=T)
-results[,'Boise_rand'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[cols]
-# results[, 'Baseline'] = rep(mean(baseline_nef, na.rm=T), 30)
+results[,'Boise_rand'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[2:31]
+results[, 'Baseline'] = rep(mean(baseline_nef, na.rm=T), 30)
 
 legend_title_size = 13
 legend_text_size = 13
 axis_title_size = 14
 axis_text_size = 13
 p4 <- ggplot(results)+
-  # geom_point(mapping = aes(x = Informer_size, y = Boise_block))+
-  # geom_line(mapping = aes(x = Informer_size, y = Boise_block, color = 'block_Boise'))+
+  geom_point(mapping = aes(x = Informer_size, y = Boise_block))+
+  geom_line(mapping = aes(x = Informer_size, y = Boise_block, color = 'block_Boise'))+
   geom_point(mapping = aes(x = Informer_size, y = Boise_fast))+
   geom_line(mapping = aes(x = Informer_size, y = Boise_fast, color = 'fast_Boise'))+
   geom_point(mapping = aes(x = Informer_size, y = Boise_rand))+
   geom_line(mapping = aes(x = Informer_size, y = Boise_rand, color = 'rand_Boise'))+
-  # geom_line(mapping = aes(x = Informer_size, y = Baseline, color = 'Baseline'))+
+  geom_line(mapping = aes(x = Informer_size, y = Baseline, color = 'Baseline'))+
   scale_color_manual(name = "Methods", values = c("block_Boise" = "darkblue",
                                                   'fast_Boise' = 'purple',
                                                   'rand_Boise' = 'orange',
                                                   'orig_Boise' = 'green',
                                                   "Baseline" = "red"))+
-  scale_x_continuous('Informer sizes', breaks = 10*seq(1,20, by=2))+
-  #scale_y_continuous('ROCAUC mean', limits = c(0.81, 0.95))+
-  scale_y_continuous('NEF10 mean', limits = c(0.689, 0.92))+
+  scale_x_continuous('Informer sizes', breaks = seq(1,30, by=2))+
+  #scale_y_continuous('ROCAUC mean', limits = c(0.789, 0.849))+
+  scale_y_continuous('NEF10 mean', limits = c(0.673, 0.785))+
   theme(axis.title = element_text(size = axis_title_size),
         axis.text = element_text(size = axis_text_size),
         legend.title = element_text(size = legend_title_size),
         legend.text = element_text(size = legend_text_size),
         #legend.position = c(0.85,0.2),
-        legend.position = c(0.85,0.2))
+        legend.position = 'none')
 
 p3 <- ggplot(results)+
   geom_point(mapping = aes(x = Informer_size, y = Boise_rand))+

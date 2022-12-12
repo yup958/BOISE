@@ -173,14 +173,14 @@ table(kmed$clustering)
 adj_mat = matrix(0, nrow(train), nrow(train))
 for (i in 1:nrow(train)) {
   for (j in 1:nrow(train)) {
-    adj_mat[i,j] = sum(CC[,i]==CC[,j])
+    adj_mat[i,j] = sum(cl_sample$CC[,i]==cl_sample$CC[,j])
   }
 }
 ## visualization
 adj_mat = adj_mat / sample_size
 ordering = c()
-for (k in 1:max(CC[1,])) {
-  ordering = c(ordering, which(CC[1,] == k))
+for (k in 1:max(cl_sample$CC[1,])) {
+  ordering = c(ordering, which(cl_sample$CC[1,] == k))
 }
 adj_mat = adj_mat[ordering, ordering]
 image(adj_mat, axes = F, xlab = 'Targets', ylab = 'Targets')

@@ -262,35 +262,35 @@ write.table(baseline_nef, file = './results/rdinfo_nef_results.txt',row.names = 
 
 ### Plots
 library(ggplot2)
-results = data.frame('Informer_size' = (1:15))
+results = data.frame('Informer_size' = (1:20))
 cols = c(11, 21:39)
 roc_results = read.table('./results/orig_L1_roc_results.txt', sep = ' ', header=T)
-results[1:15,'Boise_L1'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[2:16]
+results[1:20,'orig_Boise'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[2:21]
 roc_results = read.table('fast_roc_results.txt', sep = ' ', header=T)
-results[,'Boise_fast'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[cols]
+results[,'Boise_fast'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[2:21]
 # roc_results = read.table('fast_info_1_roc_results.txt', sep = ' ', header=T)[-58,]
 # results[,'fast_pel1'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[cols]
 roc_results = read.table('./results/rdinfo_roc_results.txt', sep = ' ', header=T)
-results[,'Boise_rand'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[cols]
+results[,'Boise_rand'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[2:21]
 roc_results = read.table('./results/orig_L2_roc_results.txt', sep = ' ', header = T)
 results[1:15, 'Boise_L2'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[2:16]
 roc_results = read.table('./results/orig_L0_roc_results.txt', sep = ' ', header = T)
 results[1:15, 'Boise_L0'] = apply(roc_results, 2,function(x){return(mean(x, na.rm = T))})[2:16]
-results[, 'Baseline'] = rep(mean(baseline_roc, na.rm=T), 15)
+results[, 'Baseline'] = rep(mean(baseline_roc, na.rm=T), 20)
 
 nef_results = read.table('./results/orig_L1_nef_results.txt', sep = ' ', header=T)
-results[1:15,'Boise_L1'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[2:16]
+results[1:20,'orig_Boise'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[2:21]
 nef_results = read.table('fast_nef_results.txt', sep = ' ', header=T)
-results[,'Boise_fast'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[cols]
+results[,'Boise_fast'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[2:21]
 # nef_results = read.table('fast_info_1_nef_results.txt', sep = ' ', header=T)[-58,]
 # results[,'fast_pel1'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[cols]
 nef_results = read.table('./results/rdinfo_nef_results.txt', sep = ' ', header=T)
-results[,'Boise_rand'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[cols]
+results[,'Boise_rand'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[2:21]
 nef_results = read.table('./results/orig_L2_nef_results.txt', sep = ' ', header=T)
 results[1:15,'Boise_L2'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[2:16]
 nef_results = read.table('./results/orig_L0_nef_results.txt', sep = ' ', header=T)
 results[1:15,'Boise_L0'] = apply(nef_results, 2,function(x){return(mean(x, na.rm = T))})[2:16]
-results[, 'Baseline'] = rep(mean(baseline_nef, na.rm=T), 15)
+results[, 'Baseline'] = rep(mean(baseline_nef, na.rm=T), 20)
 
 revnef_results = read.table('./Res/block_revnef_results.txt', sep = ' ', header=T)
 results[,'Boise_block'] = apply(revnef_results, 2,function(x){return(mean(x, na.rm = T))})[2:14]
@@ -302,26 +302,28 @@ legend_text_size = 13
 axis_title_size = 14
 axis_text_size = 13
 p1 <- ggplot(results)+
-  # geom_point(mapping = aes(x = Informer_size, y = Boise_fast))+
-  # geom_line(mapping = aes(x = Informer_size, y = Boise_fast, color = 'fast_Boise'))+
-  # geom_point(mapping = aes(x = Informer_size, y = Boise_rand))+
-  # geom_line(mapping = aes(x = Informer_size, y = Boise_rand, color = 'rand_Boise'))+
+  geom_point(mapping = aes(x = Informer_size, y = orig_Boise))+
+  geom_line(mapping = aes(x = Informer_size, y = orig_Boise, color = 'orig_Boise'))+
+  geom_point(mapping = aes(x = Informer_size, y = Boise_fast))+
+  geom_line(mapping = aes(x = Informer_size, y = Boise_fast, color = 'fast_Boise'))+
+  geom_point(mapping = aes(x = Informer_size, y = Boise_rand))+
+  geom_line(mapping = aes(x = Informer_size, y = Boise_rand, color = 'rand_Boise'))+
   geom_line(mapping = aes(x = Informer_size, y = Baseline, color = 'Baseline'))+
-  geom_point(mapping = aes(x = Informer_size, y = Boise_L0))+
-  geom_line(mapping = aes(x = Informer_size, y = Boise_L0, color = 'Boise_L0'))+
-  geom_point(mapping = aes(x = Informer_size, y = Boise_L1))+
-  geom_line(mapping = aes(x = Informer_size, y = Boise_L1, color = 'Boise_L1'))+
-  geom_point(mapping = aes(x = Informer_size, y = Boise_L2))+
-  geom_line(mapping = aes(x = Informer_size, y = Boise_L2, color = 'Boise_L2'))+
+  # geom_point(mapping = aes(x = Informer_size, y = Boise_L0))+
+  # geom_line(mapping = aes(x = Informer_size, y = Boise_L0, color = 'Boise_L0'))+
+  # geom_point(mapping = aes(x = Informer_size, y = Boise_L1))+
+  # geom_line(mapping = aes(x = Informer_size, y = Boise_L1, color = 'Boise_L1'))+
+  # geom_point(mapping = aes(x = Informer_size, y = Boise_L2))+
+  # geom_line(mapping = aes(x = Informer_size, y = Boise_L2, color = 'Boise_L2'))+
   scale_color_manual(name = "Methods", values = c('fast_Boise' = 'purple',
                                                   'rand_Boise' = 'orange',
                                                   'Boise_L0' = 'darksalmon',
-                                                  'Boise_L1' = 'green',
+                                                  'orig_Boise' = 'green',
                                                   'Boise_L2' = 'blue',
                                                   "Baseline" = "red"))+
   scale_x_continuous('Informer sizes', breaks = seq(1,20, by=1))+
-  scale_y_continuous('ROCAUC mean', limits = c(0.789, 0.845))+
-  #scale_y_continuous('NEF10 mean', limits = c(0.678, 0.78))+
+  scale_y_continuous('ROCAUC mean', limits = c(0.789, 0.849))+
+  #scale_y_continuous('NEF10 mean', limits = c(0.673, 0.785))+
   #scale_y_continuous('revNEF mean', limits = c(0.66, 0.73))+
   theme(axis.title = element_text(size = axis_title_size),
         axis.text = element_text(size = axis_text_size),
